@@ -1,11 +1,9 @@
 // Screen-space typography, drawn with Canvas2D into a texture composited after
-// tonemapping (crisp, gets the glitch / chromatic treatment, never blooms).
+// tonemapping (crisp, never blooms).
 // Layout is authored in a 1080x1920 design space and scaled to the render size.
 
 import * as THREE from 'three';
-import { clamp, ease, fract, hash1 } from './math.js';
-
-const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+=<>/\\';
+import { clamp, ease, fract } from './math.js';
 
 export class Hud {
   constructor(W, H) {
@@ -48,21 +46,6 @@ export class Hud {
     c.shadowBlur = 0;
     c.globalAlpha = 1;
     return c.measureText(str).width;
-  }
-
-  // Text that resolves from scrambled glyphs, left to right. p in [0,1].
-  decode(str, p, seed = 0) {
-    if (p >= 1) return str;
-    if (p <= 0) return '';
-    let out = '';
-    const n = str.length;
-    for (let i = 0; i < n; i++) {
-      const local = clamp(p * 1.6 - (i / n) * 0.6);
-      if (str[i] === ' ') { out += local > 0 ? ' ' : ''; continue; }
-      if (local >= 1) out += str[i];
-      else if (local > 0) out += GLYPHS[Math.floor(hash1(i * 131 + seed + Math.floor(p * 40)) * GLYPHS.length)];
-    }
-    return out;
   }
 
   chip(str, x, y, { alpha = 1, size = 19, color = 'rgba(214,218,226,0.82)', border = 'rgba(214,218,226,0.38)' } = {}) {

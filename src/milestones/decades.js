@@ -17,10 +17,10 @@ export function decades(ctx) {
   const ruler = new FatLines(lines);
   const group = new THREE.Group();
   group.add(ruler.mesh);
-  const m = { id: 'decades', group };
-  m.update = (t, st) => ruler.set(t, ctx, (t > B('b60.1') ? 1 : 0) * (1 - (st.dissolve || 0)) * (t < B('b55.1') ? 1 : 0.6));
+  const m = { id: 'decades', group, ownClock: true };
+  m.update = (t) => ruler.set(t, ctx, t > B('b5.1') && t < B('b55.1') ? 1 : 0.6);
   m.labels = (t, hud, project) => {
-    if (t < B('b60.1') || t > B('b7.1')) return;
+    if (t < B('b5.1') || t > B('b7.1')) return;
     for (const l of labels) {
       const p = project(l.p);
       if (!p.visible || p.depth > 45) continue;

@@ -1,7 +1,7 @@
 // When each milestone is on stage, in score positions (see data/beatmap.json).
 // [reveal, leave]: objects assemble just before `reveal` and stay threaded on the line.
 export const CUES = {
-  shannon: ['b58.4', 'b5.2'],
+  shannon: ['b5.1', 'b6.1'],
   deepblue: ['b7.1', 'b9.4'],
   alphago: ['b11.1', 'b13.4'],
   imo2024: ['b15.1', 'b16.4'],

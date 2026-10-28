@@ -1,20 +1,31 @@
 // Camera language. A shot is a pure function t -> pose; a track blends consecutive
 // shots with an eased cross-fade of position / aim / up / fov, so the whole move is
-// one continuous take. Beat-driven punches and shake are layered on top.
+// one continuous take. No shake, no punches: a steadicam filter smooths whatever is
+// left of the corners between shots.
 
 import * as THREE from 'three';
 import { clamp, ease, lerp } from './math.js';
 
 export const pose = (pos, look, up = new THREE.Vector3(0, 1, 0), fov = 50, roll = 0) => ({ pos, look, up, fov, roll });
 
-const _v = new THREE.Vector3();
-
 export function blendPose(a, b, u) {
   if (u <= 0) return a;
   if (u >= 1) return b;
-  // swing the eye along an arc around the aim point rather than straight through it
-  const pos = new THREE.Vector3().lerpVectors(a.pos, b.pos, u);
+  // swing the eye along an arc around the (moving) aim point rather than straight
+  // through it: slerp the offset direction, interpolate its length in log space
   const look = new THREE.Vector3().lerpVectors(a.look, b.look, u);
+  const oa = a.pos.clone().sub(a.look), ob = b.pos.clone().sub(b.look);
+  const la = Math.max(1e-6, oa.length()), lb = Math.max(1e-6, ob.length());
+  oa.divideScalar(la); ob.divideScalar(lb);
+  const dot = clamp(oa.dot(ob), -1, 1), om = Math.acos(dot);
+  let dir;
+  if (om < 1e-4) dir = oa.clone().lerp(ob, u).normalize();
+  else if (om > Math.PI - 1e-3) dir = oa.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI * u);
+  else {
+    const so = Math.sin(om);
+    dir = oa.clone().multiplyScalar(Math.sin((1 - u) * om) / so).addScaledVector(ob, Math.sin(u * om) / so);
+  }
+  const pos = look.clone().addScaledVector(dir, Math.exp(lerp(Math.log(la), Math.log(lb), u)));
   const up = new THREE.Vector3().lerpVectors(a.up, b.up, u);
   if (up.lengthSq() < 1e-6) up.set(0, 1, 0);
   return { pos, look, up: up.normalize(), fov: lerp(a.fov, b.fov, u), roll: lerp(a.roll, b.roll, u) };
@@ -53,14 +64,37 @@ export class Track {
     const S = this.shots;
     let i = 0;
     while (i + 1 < S.length && S[i + 1].t0 <= t) i++;
-    const cur = S[i];
+    return this.poseOf(i, t);
+  }
+  // shot i at time t including its own blend in from i-1 (recursively, so a shot that
+  // starts while the previous one is still blending in does not pop)
+  poseOf(i, t) {
+    const cur = this.shots[i];
     const p = cur.fn(t);
-    if (i > 0 && t < cur.t0 + cur.blend) {
-      const u = cur.e(clamp((t - cur.t0) / cur.blend));
-      return blendPose(S[i - 1].fn(t), p, u);
-    }
+    if (i > 0 && t < cur.t0 + cur.blend) return blendPose(this.poseOf(i - 1, t), p, cur.e(clamp((t - cur.t0) / cur.blend)));
     return p;
   }
+}
+
+// Steadicam: Gaussian-weighted average of a pose function over [t - 2.5 sigma, t + 2.5 sigma].
+// sigma(t) may vary (0 = pass-through); time is wrapped so the filter runs across the seam.
+export function steady(fn, { sigma = () => 0.12, taps = 9, wrap = (t) => t } = {}) {
+  return (t) => {
+    const sg = sigma(t);
+    if (sg <= 1e-4) return fn(wrap(t));
+    const pos = new THREE.Vector3(), look = new THREE.Vector3(), up = new THREE.Vector3();
+    let fov = 0, roll = 0, W = 0;
+    for (let k = 0; k < taps; k++) {
+      const x = (k / (taps - 1)) * 2 - 1; // -1 .. 1
+      const w = Math.exp(-0.5 * (x * 2.5) * (x * 2.5));
+      const p = fn(wrap(t + x * 2.5 * sg));
+      pos.addScaledVector(p.pos, w); look.addScaledVector(p.look, w); up.addScaledVector(p.up, w);
+      fov += p.fov * w; roll += (p.roll || 0) * w; W += w;
+    }
+    pos.multiplyScalar(1 / W); look.multiplyScalar(1 / W);
+    if (up.lengthSq() < 1e-8) up.set(0, 1, 0);
+    return { pos, look, up: up.normalize(), fov: fov / W, roll: roll / W };
+  };
 }
 
 export function applyPose(camera, p, aspect) {
@@ -72,10 +106,4 @@ export function applyPose(camera, p, aspect) {
   camera.aspect = aspect;
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld(true);
-}
-
-// small deterministic noise for handheld shake
-export function shake(t, amp, seed = 0) {
-  const n = (f, o) => Math.sin(t * f + o + seed) * 0.6 + Math.sin(t * f * 2.31 + o * 1.7 + seed) * 0.4;
-  return _v.set(n(17.3, 0.1), n(13.1, 2.3), n(11.7, 4.1)).multiplyScalar(amp).clone();
 }

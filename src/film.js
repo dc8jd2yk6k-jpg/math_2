@@ -57,16 +57,24 @@ export class Film {
     t = this.wrap(t);
     const S = this.script;
     const s = S.headS(t);
+    this.cameraAt(t, this.camera);
     const st = S.state(t, s);
     this.state = st;
-    this.cameraAt(t, this.camera);
+    if (st.near && st.near !== this.camera.near) {
+      this.camera.near = st.near;
+      this.camera.far = Math.min(9000, st.near * 2e5);
+      this.camera.updateProjectionMatrix();
+    }
     const a = this.curve.at(s);
     this.head.set(a.p, this.camera, this.H, st.head);
     this.trail.set(s, this.W, this.H, this.camera.near, st.trailWidth * (this.H / 1920));
     const tu = this.trail.material.uniforms;
     tu.uFade.value = st.trailFade; tu.uDissolve.value = st.trailDissolve; tu.uGain.value = st.trailGain;
     this.stars.material.uniforms.uGain.value = st.starGain;
-    for (const m of this.milestones) m.update(t, st);
+    // during the opening rewind the objects show their end-of-loop state (time t + T),
+    // so everything threaded on the line continues across the seam
+    const tm = st.milestoneTime ?? t;
+    for (const m of this.milestones) m.update(m.ownClock ? t : tm, st);
   }
 
   // On-screen motion across the shutter, in pixels: how far a point on the line at the
@@ -88,8 +96,14 @@ export class Film {
     const t = i / this.fps;
     const span = shutter / this.fps;
     let N = Math.max(1, subframes | 0);
-    // thin lines strobe when copies are far apart: add sub-frames for fast moves
-    if (adaptive && N > 1) N = Math.min(16, Math.max(N, Math.ceil(this.motionPx(t, span) / (5 * (this.H / 1920)))));
+    // thin lines strobe when copies are far apart: add sub-frames for fast moves. The
+    // motion is the max over neighbouring frames, so N changes gradually.
+    if (adaptive && N > 1) {
+      let m = 0;
+      for (const d of [-2, -1, 0, 1, 2]) m = Math.max(m, this.motionPx(t + d / this.fps, span));
+      N = Math.min(16, Math.max(N, Math.ceil(m / (5 * (this.H / 1920)))));
+      for (const d of [-2, 0, 2]) N = Math.max(N, this.script.minSub(this.wrap(t + d / this.fps)));
+    }
     this.lastSubframes = N;
     const cam = this.hudCamera;
     this.post.beginFrame();
@@ -112,18 +126,21 @@ export class Film {
     this.hud.end();
     const fx = this.state.fx;
     const u = this.post.u;
-    u.uBloom.value = fx.bloom; u.uExposure.value = fx.exposure; u.uCA.value = fx.ca; u.uGlitch.value = fx.glitch;
-    u.uSeed.value = Math.floor(t * 30) * 0.618; u.uFlash.value = fx.flash; u.uVignette.value = fx.vignette;
+    u.uBloom.value = fx.bloom; u.uExposure.value = fx.exposure; u.uCA.value = fx.ca;
+    u.uFlash.value = fx.flash; u.uVignette.value = fx.vignette;
     u.uFade.value = fx.fade; u.uSaturation.value = fx.saturation ?? 1;
     if (fx.flashColor) u.uFlashColor.value.copy(fx.flashColor);
     this.post.finish(this.hud.texture);
   }
 
   // Sub-pixel projection jitter per sub-frame (Halton 2,3): accumulation then gives
-  // supersampled anti-aliasing together with the motion blur.
+  // supersampled anti-aliasing together with the motion blur. The N offsets are
+  // centred on zero, so changing N between frames never shifts the image.
   jitter(cam, k, N) {
     const halton = (i, b) => { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; };
-    const jx = halton(k + 1, 2) - 0.5, jy = halton(k + 1, 3) - 0.5;
+    let mx = 0, my = 0;
+    for (let j = 1; j <= N; j++) { mx += halton(j, 2); my += halton(j, 3); }
+    const jx = halton(k + 1, 2) - mx / N, jy = halton(k + 1, 3) - my / N;
     cam.projectionMatrix.elements[8] += (jx * 2) / this.W;
     cam.projectionMatrix.elements[9] += (jy * 2) / this.H;
     cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();

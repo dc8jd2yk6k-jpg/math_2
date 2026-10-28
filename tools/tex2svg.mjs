@@ -20,6 +20,8 @@ export const EQUATIONS = {
   shannon: String.raw`\approx 10^{120}`,
   ns: String.raw`\partial_t u + (u\cdot\nabla)\,u = -\nabla p + \nu\,\Delta u,\qquad \nabla\cdot u = 0`,
   ns_blow: String.raw`\lVert u(t)\rVert_{\infty} \longrightarrow \infty \quad \text{as } t \to T^{*}`,
+  ns_scale: String.raw`u(x,t)\;\longmapsto\;\lambda\,u(\lambda x,\,\lambda^{2} t)`,
+  ns_tstar: String.raw`t \to T^{*}`,
   jac_F: String.raw`F(x,y,z)=\begin{pmatrix} z(1+xy)^3 + y^2(1+xy)(4+3xy) \\ y + 3x(1+xy)^2 z + 3xy^2(4+3xy) \\ 2x - 3x^2 y - x^3 z \end{pmatrix}`,
   jac_det: String.raw`\det J_F \equiv -2`,
   jac_eq: String.raw`F\!\left(0,0,-\tfrac14\right) = F\!\left(1,-\tfrac32,\tfrac{13}{2}\right) = \left(-\tfrac14,0,0\right)`,

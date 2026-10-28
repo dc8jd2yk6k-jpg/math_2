@@ -32,6 +32,28 @@
    1000
   ]
  },
+ "ns_scale": {
+  "file": "assets/tex/ns_scale.svg",
+  "wEx": 24.263,
+  "hEx": 2.565,
+  "viewBox": [
+   0,
+   -883.9,
+   10724.4,
+   1133.9
+  ]
+ },
+ "ns_tstar": {
+  "file": "assets/tex/ns_tstar.svg",
+  "wEx": 7.043,
+  "hEx": 1.703,
+  "viewBox": [
+   0,
+   -741.8,
+   3113.1,
+   752.8
+  ]
+ },
  "jac_F": {
   "file": "assets/tex/jac_F.svg",
   "wEx": 48.776,

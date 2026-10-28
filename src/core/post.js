@@ -1,6 +1,6 @@
 // HDR pipeline: 4x MSAA half-float scene -> temporal accumulation (real motion blur)
 // -> physically based mip-chain bloom (13-tap down / tent up, Jimenez 2014)
-// -> composite (chromatic aberration, glitch, flash, ACES, vignette, HUD, dither).
+// -> composite (static chromatic aberration, flash, ACES, vignette, HUD, dither).
 
 import * as THREE from 'three';
 import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
@@ -56,29 +56,17 @@ void main() { gl_FragColor = vec4(texture2D(tSrc, vUv).rgb * uWeight, 1.0); }`;
 
 const COMPOSITE = /* glsl */`
 uniform sampler2D tScene; uniform sampler2D tBloom; uniform sampler2D tHud;
-uniform vec2 uRes; uniform float uBloom; uniform float uExposure; uniform float uCA; uniform float uGlitch;
-uniform float uSeed; uniform float uFlash; uniform vec3 uFlashColor; uniform float uVignette; uniform float uFade;
-uniform float uHudGlitch; uniform float uSaturation; uniform float uScrim;
+uniform vec2 uRes; uniform float uBloom; uniform float uExposure; uniform float uCA;
+uniform float uFlash; uniform vec3 uFlashColor; uniform float uVignette; uniform float uFade;
+uniform float uSaturation; uniform float uScrim;
 varying vec2 vUv;
-float hash(float n) { return fract(sin(n) * 43758.5453123); }
-float hash2(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
 vec3 toSRGB(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
 float ign(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 void main() {
   vec2 uv = vUv;
-  vec2 hudUv = vUv;
-  if (uGlitch > 0.001) {
-    float rows = 28.0 + 30.0 * hash(uSeed * 3.1);
-    float row = floor(uv.y * rows);
-    float r = hash(row * 1.7 + uSeed * 13.3);
-    if (r < uGlitch * 0.55) {
-      float sh = (hash(row * 9.13 + uSeed) - 0.5) * 0.12 * uGlitch;
-      uv.x += sh; hudUv.x += sh * uHudGlitch;
-    }
-  }
   vec2 d = uv - 0.5;
-  float ca = uCA + uGlitch * 0.012;
+  float ca = uCA;
   vec2 off = d * ca * (0.4 + dot(d, d) * 2.5);
   vec3 col;
   col.r = texture2D(tScene, uv - off).r;
@@ -97,12 +85,7 @@ void main() {
   col *= mix(1.0, v, uVignette);
   col = toSRGB(col);
   col *= 1.0 - uScrim * smoothstep(0.62, 0.92, vUv.y) * (1.0 - smoothstep(0.985, 1.0, vUv.y) * 0.3);
-  vec4 h = texture2D(tHud, hudUv);
-  if (uGlitch > 0.001 && uHudGlitch > 0.0) {
-    float hr = texture2D(tHud, hudUv + vec2(0.004 * uGlitch, 0.0)).a;
-    float hb = texture2D(tHud, hudUv - vec2(0.004 * uGlitch, 0.0)).a;
-    h.rgb += vec3(hr - h.a, 0.0, hb - h.a) * 0.6 * uHudGlitch;
-  }
+  vec4 h = texture2D(tHud, vUv);
   col = h.rgb + col * (1.0 - h.a);
   col *= uFade;
   col += (ign(gl_FragCoord.xy) - 0.5) / 255.0;
@@ -131,8 +114,8 @@ export class Post {
     this.composite = quad(COMPOSITE, {
       tScene: { value: this.accumRT.texture }, tBloom: { value: this.mipRT[0].texture }, tHud: { value: null },
       uRes: { value: new THREE.Vector2(W, H) }, uBloom: { value: 0.9 }, uExposure: { value: 1 }, uCA: { value: 0.002 },
-      uGlitch: { value: 0 }, uSeed: { value: 0 }, uFlash: { value: 0 }, uFlashColor: { value: new THREE.Color(1, 0.85, 0.8) },
-      uVignette: { value: 0.55 }, uFade: { value: 1 }, uHudGlitch: { value: 1 }, uSaturation: { value: 1 }, uScrim: { value: 0.38 },
+      uFlash: { value: 0 }, uFlashColor: { value: new THREE.Color(1, 0.85, 0.8) },
+      uVignette: { value: 0.55 }, uFade: { value: 1 }, uSaturation: { value: 1 }, uScrim: { value: 0.38 },
     });
     this.u = this.composite.material.uniforms;
   }

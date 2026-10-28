@@ -104,7 +104,7 @@ export class Starfield {
       uniforms: {
         uVP: { value: new THREE.Matrix4() }, uVPPrev: { value: new THREE.Matrix4() },
         uRes: { value: new THREE.Vector2(1080, 1920) }, uFocal: { value: 1000 }, uLoop: { value: 0 },
-        uMaxPx: { value: 26 }, uGain: { value: 1 }, uTwinkle: { value: 0.35 }, uColor: { value: new THREE.Color(0.92, 0.94, 1.0) },
+        uMaxPx: { value: 26 }, uGain: { value: 1 }, uTwinkle: { value: 0 }, uColor: { value: new THREE.Color(0.92, 0.94, 1.0) },
       },
       transparent: true, depthWrite: false, depthTest: true,
       blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendEquation: THREE.AddEquation,

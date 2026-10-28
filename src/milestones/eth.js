@@ -119,7 +119,7 @@ export function ethClaude(ctx) {
     trail.set(t, ctx, life * (t > tStart ? 1 : 0) * (1 - clamp((t - B('b56.1')) / 1.5)));
     pos.set(Math.min(6, -46 + speed * Math.max(0, t - tStart)), 0, off).applyMatrix4(m.group.matrix);
     const alive = t > tStart && t < B('b55.2') ? 1 : 0;
-    head.set(pos, ctx.film.camera, ctx.H, { size: 0.5, glow: 2.2, core: 7, minPx: 18, alpha: alive * life * (1 - clamp((t - B('b54.4')) / 0.6)), light: 0 });
+    head.set(pos, ctx.film.camera, ctx.H, { size: 0.3, glow: 1.3, core: 5, minPx: 18, alpha: alive * life * (1 - clamp((t - B('b54.4')) / 0.6)), light: 0 });
     head.light.visible = false;
   };
   m.labels = (t, hud, project) => {

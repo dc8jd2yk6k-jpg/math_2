@@ -1,5 +1,5 @@
 // 1950 — Claude Shannon, "Programming a Computer for Playing Chess".
-// The big bang of the film: the head ignites at the origin and the chess game tree
+// The head, rewound to the origin, ignites on the b5 downbeat and the chess game tree
 // blooms as a radial tree on concentric rings — about 30 moves per ply, rings
 // multiplying outward toward Shannon's estimate of ~10^120 games.
 
@@ -76,25 +76,27 @@ export function shannon(ctx) {
   m.group.add(spin);
   m.outer = disc(R0 + DR * RINGS, -0.35);
 
+  const tIg = ctx.B('b5.1');
+  m.ownClock = true;                       // ignites in real time, not part of the rewind
   m.update = (t, st) => {
-    const T = ctx.beat.T;
-    const local = t;                      // ignition at t = 0 (the final stab)
-    const life = m.alive(st);
+    const local = t - tIg;                 // ignition on the b5 downbeat
     const grow = ease.outExpo(clamp(local / 1.1));
+    spin.visible = local > 0 && local < 9;
     spin.scale.setScalar(Math.max(0.001, 0.15 + 0.85 * grow));
     spin.setRotationFromAxisAngle(n, local * 0.06);
-    const fadeAfter = 1 - 0.55 * clamp((local - 5) / 3);
-    const a = life * fadeAfter * (t < T - 4.5 ? 1 : 0) * clamp(local / 0.18) * (0.35 + 0.65 * grow);
+    const fadeAfter = 1 - 0.6 * clamp((local - 3) / 3);
+    const a = (local > 0 ? 1 : 0) * fadeAfter * clamp(local / 0.18) * (0.35 + 0.65 * grow);
     ringLines.set(local, ctx, a);
     tree.set(local, ctx, a);
     nodeDots.set(local, ctx, a);
   };
 
   m.labels = (t, hud, project) => {
-    if (t > 5.5) return;
+    const local = t - tIg;
+    if (local < 0 || local > 3) return;
     const p = project(m.local(m.outer));
-    const a = clamp((t - 0.7) / 0.5) * (1 - clamp((t - 4.6) / 0.6));
-    if (p.visible) hud.tex(ctx.assets.tex.shannon, p.x + 70, p.y + 40, 44, { alpha: a, align: 'left', reveal: clamp((t - 0.7) / 0.6) });
+    const a = clamp((local - 0.5) / 0.4) * (1 - clamp((local - 2.2) / 0.5));
+    if (p.visible) hud.tex(ctx.assets.tex.shannon, p.x + 70, p.y + 40, 44, { alpha: a, align: 'left', reveal: clamp((local - 0.5) / 0.6) });
   };
   return m;
 }
