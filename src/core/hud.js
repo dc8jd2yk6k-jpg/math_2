@@ -137,6 +137,22 @@ export class Hud {
     c.globalAlpha = 1;
   }
 
+  // pre-rendered MathJax equation (see tools/tex2svg.mjs); reveal wipes left -> right
+  tex(eq, x, y, height, { alpha = 1, align = 'center', reveal = 1, glow = 14 } = {}) {
+    if (!eq || alpha <= 0.002 || reveal <= 0) return;
+    const c = this.ctx;
+    const w = (height * eq.wEx) / eq.hEx;
+    const x0 = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+    const y0 = y - height / 2;
+    c.save();
+    c.globalAlpha = clamp(alpha);
+    if (reveal < 1) { c.beginPath(); c.rect(x0 - 6, y0 - height, (w + 12) * clamp(reveal), height * 3); c.clip(); }
+    c.shadowColor = 'rgba(255,255,255,0.35)';
+    c.shadowBlur = glow * this.k;
+    c.drawImage(eq.img, x0, y0, w, height);
+    c.restore();
+  }
+
   label(str, sx, sy, { size = 30, family = 'Inter', weight = 500, style = 'normal', alpha = 1, dot = true, dx = 26, dy = 0,
     color = '#f4f4f4', align = 'left', dotColor = 'rgba(255,255,255,0.95)', glow = 10 } = {}) {
     if (alpha <= 0.002) return;
@@ -196,10 +212,24 @@ function runningDigits(v, suffix) {
     const place = s.length - 1 - j;
     const unit = Math.pow(10, place);
     const digit = Math.floor(v / unit) % 10;
-    // a digit only turns while every lower digit is rolling over from 9s to 0s
-    const carry = place === 0 ? frac : clamp((v % unit) - (unit - 1));
+    // mechanical counter: the ones digit turns in the last fifth of each unit, and a
+    // higher digit only turns while every lower digit rolls over from 9 to 0
+    const ones = clamp((frac - 0.8) / 0.2);
+    const carry = place === 0 ? ones : clamp(((v % unit) - (unit - 1) - 0.8) / 0.2);
     cells.push({ from: String(digit), to: String(digit), u: 1, roll: digit + carry, alpha: 1 });
   }
   for (const ch of suffix) cells.push({ from: ch, to: ch, u: 1, alpha: 1 });
   return cells;
+}
+
+export async function loadTex(url = 'assets/tex/index.json') {
+  const man = await (await fetch(url)).json();
+  const out = {};
+  await Promise.all(Object.entries(man).map(([k, v]) => new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => { out[k] = { ...v, img }; res(); };
+    img.onerror = rej;
+    img.src = v.file;
+  })));
+  return out;
 }

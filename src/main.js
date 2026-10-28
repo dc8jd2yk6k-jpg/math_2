@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { loadBeat } from './core/beat.js';
 import { Film } from './film.js';
+import { loadTex } from './core/hud.js';
 
 const P = new URLSearchParams(location.search);
 const W = +(P.get('w') || 1080), H = +(P.get('h') || 1920);
@@ -26,7 +27,8 @@ await Promise.all([
 ].map((f) => document.fonts.load(f)));
 
 const beat = await loadBeat('data/beatmap.json');
-const film = new Film({ renderer, W, H, beat, assets: {}, opts: { debug: P.has('debug'), samples: +(P.get('msaa') ?? 4) } });
+const assets = { tex: await loadTex(), sgf: await (await fetch('data/alphago_leesedol_game2.sgf')).text() };
+const film = new Film({ renderer, W, H, beat, assets, opts: { debug: P.has('debug'), samples: +(P.get('msaa') ?? 4) } });
 window.film = film;
 
 if (RENDER) {

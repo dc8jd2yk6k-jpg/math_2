@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { YEARS, SX } from '../core/curve.js';
-import { Track, follow, orbit, pose } from '../core/camera.js';
+import { Track, follow, orbit, pose, shake } from '../core/camera.js';
 import { DateTrack } from '../core/hud.js';
 import { clamp, ease, envelope, lerp, pchip, smoothstep, keyframes } from '../core/math.js';
 
@@ -49,6 +49,10 @@ export function buildScript(ctx) {
     [B('b53.1'), sY(YEARS.eth_openai) - 4], [B('b53.3'), sY(YEARS.eth_openai)],
     [B('b54.1'), sY(YEARS.eth_claude) - 4], [B('b54.3'), sY(YEARS.eth_claude)],
     [B('b54.4'), topS], [B('b55.2'), topS + 120], [B('b55.4'), endS],
+    // the rewind: the head races back down the whole curve, erasing its trail, and
+    // reaches the origin exactly at the loop point, where frame 0 ignites it again
+    [B('b57.1'), endS], [B('b57.3'), topS + 40], [B('b58.1'), sY(2024.5)], [B('b58.2'), sY(2012)], [B('b58.3'), sY(1975)],
+    [T - 0.12, 0.6], [T, 0],
   ];
   const headSpline = pchip(anchors.map((a) => a[0]), anchors.map((a) => a[1]));
   const headS = (t) => clamp(headSpline.f(t), 0, curve.length);
@@ -60,68 +64,83 @@ export function buildScript(ctx) {
   // opening. Distance to the origin is interpolated in log space (an exponential
   // zoom), so the move decelerates continuously through frame 0.
   const tau0 = B('b57.1') - T; // ~ -3.82 s
-  const seamKeysT = [tau0 - 1.5, tau0, tau0 + 1.3, tau0 + 2.6, -0.6, 0, 1.3, B('b60.1')];
-  const seamLogD = [Math.log(560), Math.log(560), Math.log(240), Math.log(42), Math.log(12), Math.log(8.2), Math.log(7.0), Math.log(6.6)];
+  const seamKeysT = [tau0 - 1.5, tau0, tau0 + 1.3, tau0 + 2.6, -0.6, 0, 1.3, B('b60.1'), B('b60.3')];
+  const seamLogD = [560, 560, 240, 60, 22, 13, 11.5, 10.5, 9.8].map(Math.log);
   const seamD = pchip(seamKeysT, seamLogD);
   const pullCenter = new THREE.Vector3(96, 150, 0);
   const seam = (t) => {
     const tau = t > T / 2 ? t - T : t;
     const d = Math.exp(seamD.f(tau));
-    const u = smoothstep(Math.log(560), Math.log(9), Math.log(d)); // 0 far .. 1 near
-    const target = new THREE.Vector3().lerpVectors(pullCenter, new THREE.Vector3(0.35, 0, 0), ease.inOutCubic(u));
-    const az = lerp(0, -0.42, ease.inOutCubic(clamp((tau + 1.2) / 4)));
-    const el = lerp(0.0, 0.16, ease.inOutCubic(clamp((tau + 1.5) / 4)));
+    const u = smoothstep(Math.log(560), Math.log(14), Math.log(d)); // 0 far .. 1 near
+    const origin = new THREE.Vector3(0.3, 0, 0);
+    let target;
+    if (tau < 0) {
+      // follow the rewinding head down the curve, converging on the origin
+      const hp = curve.at(headS(t)).p;
+      const w = ease.inOutCubic(clamp((tau - tau0) / 0.9));
+      const chase = new THREE.Vector3(hp.x, Math.min(hp.y, 420), 0).lerp(origin, ease.inQuad(clamp((tau + 0.9) / 0.9)));
+      target = new THREE.Vector3().lerpVectors(pullCenter, chase, w);
+    } else target = origin;
+    const az = lerp(0, -0.38, ease.inOutCubic(clamp((tau + 1.0) / 4.2)));
+    const el = lerp(0.0, 0.12, ease.inOutCubic(clamp((tau + 1.5) / 4.5)));
     const dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
-    const fov = lerp(40, 52, u);
-    return pose(target.clone().addScaledVector(dir, d), target, new THREE.Vector3(0, 1, 0), fov, 0);
+    return pose(target.clone().addScaledVector(dir, d), target, new THREE.Vector3(0, 1, 0), lerp(40, 50, u), 0);
   };
 
   const F = (opts) => (t) => follow(curve, headS(t), typeof opts === 'function' ? opts(t) : opts);
   const at = (id) => curve.at(sY(YEARS[id]));
+  const P = (id) => at(id).p.clone();
+  const S = (a, b, t) => smoothstep(B(a), B(b), t);
+  const W = (x, y, z) => new THREE.Vector3(x, y, z);
+  // orbit about a world point (az around world Y, el above the horizon); d interpolated in log space
+  const orb = (center, { d0, d1 = d0, az0, az1 = az0, el0, el1 = el0, fov = 46, look = null, k = (t) => 0 }) => (t) => {
+    const u = k(t);
+    const d = Math.exp(lerp(Math.log(d0), Math.log(d1), u)), az = lerp(az0, az1, u), el = lerp(el0, el1, u);
+    const c = typeof center === 'function' ? center(t) : center;
+    const dir = W(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+    return pose(c.clone().addScaledVector(dir, d), (look ? (typeof look === 'function' ? look(t) : look) : c).clone(), W(0, 1, 0), fov, 0);
+  };
+  const frameOrb = (id, center, { radius, az0, az1 = az0, el0, el1 = el0, fov = 46, k, lookOff = W(0, 0, 0) }) => (t) => {
+    const a = at(id), u = k(t);
+    return orbit(center, { radius, az: lerp(az0, az1, u), el: lerp(el0, el1, u), fov, frame: a, look: center.clone().add(lookOff) });
+  };
+  const db = at('deepblue'), ag = at('alphago');
+  const dbBoard = db.p.clone().addScaledVector(db.N, -1.32);
+  const agBoard = ag.p.clone().addScaledVector(ag.N, -0.62);
 
   const track = new Track()
     .add(0, seam, { blend: 0 })
-    .add(B('b60.2'), F((t) => ({ back: 6.5, up: 1.4, side: lerp(6.5, 4.5, smoothstep(B('b60.2'), B('b6.1'), t)), lookAhead: 5, fov: 50 })), { blend: 2.0 })
-    // Deep Blue: skim low over the board
-    .add(B('b7.1', -1), F((t) => ({ back: 4.2, up: 0.75, side: lerp(1.6, 0.8, smoothstep(B('b7.1'), B('b8.3'), t)), lookAhead: 4, lookUp: -0.3, fov: 52 })), { blend: 1.6 })
-    .add(B('b9.1'), F((t) => ({ back: 7, up: 3.2, side: 4.5, lookAhead: 1.5, fov: 48, orbit: lerp(0, 0.5, smoothstep(B('b9.1'), B('b10.1'), t)) })), { blend: 1.2 })
-    // AlphaGo: high over the board, then the slope steepens
-    .add(B('b10.3'), (t) => {
-      const a = at('alphago');
-      return orbit(a.p, { radius: 11, az: lerp(-1.2, -0.4, smoothstep(B('b10.3'), B('b13.4'), t)), el: lerp(1.0, 0.75, smoothstep(B('b11.1'), B('b13.4'), t)), fov: 46, frame: null, look: a.p.clone().addScaledVector(a.T, lerp(-1.5, 1.5, smoothstep(B('b10.3'), B('b13.4'), t))) });
-    }, { blend: 1.6 })
-    // the lull before the drop: whip around the head and look up the slope
-    .add(B('b14.1'), F((t) => ({ back: 7, up: 1.5, side: 4, lookAhead: 8, fov: 50, orbit: lerp(0, Math.PI * 1.15, ease.inOutExpo(smoothstep(B('b14.2'), B('b15.1'), t))) })), { blend: 0.9 })
-    // IMO 2024: front-on to the construction
-    .add(B('b15.1'), (t) => {
-      const a = at('imo2024');
-      return orbit(a.p.clone().addScaledVector(a.N, 1.5), { radius: 15, az: lerp(1.42, 1.62, smoothstep(B('b15.1'), B('b17.1'), t)), el: 0.08, fov: 46 });
-    }, { blend: 0.35, e: ease.outCubic })
-    // IMO 2025: below, looking up the rising line
-    .add(B('b17.1', -0.5), F((t) => ({ back: 10, up: -1.0, side: 4.5, lookAhead: 9, fov: 50, orbit: lerp(-0.3, 0.3, smoothstep(B('b17.1'), B('b19.1'), t)) })), { blend: 1.0 })
-    // 2026: the vertical stack
-    .add(B('b19.1', -0.5), (t) => {
-      const a = at('erdos');
-      return orbit(a.p, { radius: 17, az: lerp(0.4, 1.4, smoothstep(B('b19.1'), B('b21.1'), t)), el: 0.55, fov: 44 });
-    }, { blend: 1.0 })
-    .add(B('b21.1', -0.5), (t) => {
-      const a = at('jacobian');
-      return orbit(a.p, { radius: 16, az: lerp(1.6, 2.6, smoothstep(B('b21.1'), B('b23.1'), t)), el: 0.25, fov: 44 });
-    }, { blend: 1.0 })
-    .add(B('b23.1', -0.5), F((t) => ({ back: 9, up: 0.6, side: 1.2, lookAhead: 6, fov: 56, orbit: lerp(0, 1.2, smoothstep(B('b23.1'), B('b24.4'), t)) })), { blend: 1.0 })
-    .add(B('b33.1'), (t) => {
-      const a = at('navierstokes');
-      const c = a.p.clone().addScaledVector(a.T, -12);
-      return orbit(c, { radius: lerp(34, 20, smoothstep(B('b33.1'), B('b34.4'), t)), az: lerp(0.3, 0.9, smoothstep(B('b33.1'), B('b35.1'), t)), el: 0.12, fov: 42 });
-    }, { blend: 1.0 })
-    // into the vortex tunnel
-    .add(B('b35.1', -0.6), F((t) => ({ back: 6, up: 0.35, side: 0.25, lookAhead: 12, fov: 62, upMode: 'curve', orbit: (t - B('b35.1')) * 0.6 })), { blend: 0.6, e: ease.inOutExpo })
-    .add(B('b49.1', -0.5), (t) => {
-      const a = at('manuscripts');
-      return orbit(a.p, { radius: lerp(22, 14, smoothstep(B('b49.1'), B('b51.1'), t)), az: lerp(0.8, 2.2, smoothstep(B('b49.1'), B('b51.1'), t)), el: 0.3, fov: 46 });
-    }, { blend: 0.8 })
-    .add(B('b51.1', -0.5), F((t) => ({ back: 10, up: 1.0, side: 6, lookAhead: 2, fov: 46, orbit: lerp(0.4, 1.4, smoothstep(B('b51.1'), B('b53.1'), t)) })), { blend: 0.9 })
-    .add(B('b53.1', -0.3), F((t) => ({ back: 12, up: -1.5, side: 7, lookAhead: 6, fov: 48, orbit: lerp(-0.5, 0.2, smoothstep(B('b53.1'), B('b55.1'), t)) })), { blend: 0.6 })
+    // 1950 -> 1997: chase cam, the decades stream past
+    .add(B('b60.2'), F((t) => ({ back: lerp(9, 6.5, S('b60.2', 'b6.1', t)), up: 1.3, side: lerp(3.5, 1.6, S('b60.2', 'b6.1', t)), lookAhead: 6, fov: lerp(50, 56, S('b5.1', 'b6.3', t)) })), { blend: 1.8 })
+    // Deep Blue: skim just above the pieces
+    .add(B('b7.1', -1.5), F((t) => ({ back: 3.6, up: -0.28, side: lerp(1.1, 0.6, S('b7.1', 'b8.1', t)), lookAhead: 5, lookUp: -0.05, fov: 58 })), { blend: 1.3 })
+    // ... then rise to see the search tree burst
+    .add(B('b8.1'), frameOrb('deepblue', dbBoard, { radius: 8.5, az0: Math.PI + 0.55, az1: Math.PI + 1.25, el0: 0.32, el1: 0.72, fov: 48, k: (t) => ease.inOutCubic(S('b8.1', 'b9.4', t)), lookOff: W(0, 1.4, 0) }), { blend: 1.1 })
+    .add(B('b9.4'), F({ back: 7, up: 1.6, side: 1.4, lookAhead: 8, fov: 58 }), { blend: 1.0 })
+    // AlphaGo: high over the board
+    .add(B('b10.3'), frameOrb('alphago', agBoard, { radius: 10, az0: Math.PI + 0.35, az1: Math.PI + 0.95, el0: 1.05, el1: 0.82, fov: 46, k: (t) => ease.inOutSine(S('b10.3', 'b13.4', t)) }), { blend: 1.4 })
+    // the lull before the drop: whip around the head as the slope steepens
+    .add(B('b14.1'), F((t) => ({ back: 7.5, up: 1.4, side: 2.5, lookAhead: 7, fov: 52, orbit: lerp(0, Math.PI * 0.9, ease.inOutExpo(S('b14.2', 'b15.1', t))) })), { blend: 1.0 })
+    // IMO 2024: square-on to the construction
+    .add(B('b15.1', -0.12), orb((t) => P('imo2024').add(W(2.1, -1.64, 0)), { d0: 19.5, d1: 18.5, az0: 0.06, az1: -0.05, el0: 0.03, el1: -0.02, fov: 46, k: (t) => S('b15.1', 'b17.1', t) }), { blend: 0.3, e: ease.outCubic })
+    // IMO 2025
+    .add(B('b17.1', -0.4), orb((t) => P('imo2025').add(W(2.2, 1.0, 0)), { d0: 20, d1: 19, az0: -0.06, az1: 0.06, el0: -0.03, el1: 0.03, fov: 46, k: (t) => S('b17.1', 'b19.1', t) }), { blend: 0.55 })
+    // below the line, looking up the vertical: 2026 begins
+    .add(B('b18.4'), F({ back: 10, up: -2.6, side: 2.4, lookAhead: 12, fov: 58 }), { blend: 0.8 })
+    .add(B('b19.1', -0.25), orb(P('erdos'), { d0: 11.5, d1: 10, az0: 0.5, az1: 1.4, el0: 0.66, el1: 0.5, fov: 46, k: (t) => S('b19.1', 'b21.1', t), look: P('erdos').add(W(0, 0.4, 0)) }), { blend: 0.8 })
+    .add(B('b21.1', -0.4), orb(P('jacobian'), { d0: 15, d1: 13.5, az0: 1.7, az1: 2.5, el0: 0.14, el1: 0.06, fov: 46, k: (t) => S('b21.1', 'b23.1', t), look: P('jacobian').add(W(0, 2.2, 0)) }), { blend: 0.8 })
+    .add(B('b23.1', -0.4), orb(P('percolation'), { d0: 30, d1: 21, az0: 2.8, az1: 3.7, el0: 0.42, el1: 0.18, fov: 44, look: P('percolation').add(W(0, 1.6, 0)), k: (t) => ease.inOutQuad(S('b23.1', 'b24.4', t)) }), { blend: 0.8 })
+    // Navier-Stokes: from below, looking up at the forming vortex ...
+    .add(B('b33.1', -0.3), orb((t) => P('navierstokes').add(W(0, -6, 0)), { d0: 30, d1: 17, az0: 0.3, az1: 0.85, el0: -0.32, el1: -0.42, fov: 50, k: (t) => S('b33.1', 'b34.4', t), look: P('navierstokes').add(W(0, 2, 0)) }), { blend: 0.9 })
+    // ... then swoop inside the tunnel on the pickup and corkscrew up it
+    .add(B('b34.4'), F((t) => ({ back: 5, up: 0.22, side: 0.18, lookAhead: 10, fov: 66, upMode: 'curve', orbit: (t - B('b35.1')) * 0.95 })), { blend: 0.55, e: ease.inOutExpo })
+    // 722 manuscripts: outside the helix, then inside it
+    .add(B('b49.1', -0.4), orb(P('manuscripts'), { d0: 26, d1: 17, az0: 0.9, az1: 1.5, el0: 0.12, el1: 0.05, fov: 48, k: (t) => S('b49.1', 'b50.3', t), look: P('manuscripts').add(W(0, -2, 0)) }), { blend: 0.6 })
+    .add(B('b50.3'), F({ back: 7, up: 0.4, side: 1.4, lookAhead: 9, fov: 58, upMode: 'curve' }), { blend: 0.7 })
+    // Yang-Mills: around the bundle
+    .add(B('b51.1', -0.4), orb(P('yangmills'), { d0: 14, d1: 12.5, az0: 2.0, az1: 2.9, el0: 0.2, el1: 0.42, fov: 46, k: (t) => S('b51.1', 'b53.1', t) }), { blend: 0.7 })
+    // ETH: under the barriers looking up as the two comets break through
+    .add(B('b53.1', -0.7), orb(P('eth_openai').add(W(0, -5, 0)), { d0: 12, d1: 14, az0: 0.55, az1: 0.95, el0: -0.5, el1: -0.42, fov: 52, k: (t) => S('b53.1', 'b54.4', t), look: P('eth_openai').add(W(0, 7, 0)) }), { blend: 0.6 })
     // pull back to the whole curve
     .add(B('b54.4'), (t) => {
       const u = ease.inOutCubic(smoothstep(B('b54.4'), B('b56.3'), t));
@@ -133,6 +152,16 @@ export function buildScript(ctx) {
       return pose(target.clone().addScaledVector(dir, d), target, new THREE.Vector3(0, 1, 0), lerp(52, 40, u), 0);
     }, { blend: 0.8 })
     .add(B('b57.1'), seam, { blend: 0.0 });
+
+  // beat-locked camera FX: FOV punch-in on accents, a touch of shake on hits
+  const camera = (t) => {
+    const p = track.at(t);
+    const punch = beat.impulse(t, { from: 'beats', min: 0.62, decay: 0.16, attack: 0.02 });
+    p.fov = p.fov * (1 - 0.06 * Math.min(1.5, punch));
+    const sh = beat.impulse(t, { from: 'hits', min: 0.7, decay: 0.12 });
+    if (sh > 0.001) p.pos = p.pos.clone().add(shake(t, 0.035 * Math.min(1.5, sh) * p.pos.distanceTo(p.look) * 0.1));
+    return p;
+  };
 
   // ---------------------------------------------------------------- HUD: date
   const yearOfHead = (t) => curve.yearAt(headS(t));
@@ -151,7 +180,9 @@ export function buildScript(ctx) {
     { t: B('b33.1', -0.5), text: '2026.09.08', roll: 0.5 },
     { t: B('b49.1', -0.5), text: '2026.10.06', roll: 0.5 },
     { t: B('b51.1', -0.5), text: '2026.10.27', roll: 0.5 },
-    { t: B('b57.1'), text: '1950', roll: 3.0, back: true },
+    { t: B('b57.1'), text: '2026.10.27', roll: 0.01 },
+    { t: B('b57.2'), value: (t) => Math.max(1950, Math.min(2026.999, yearOfHead(t))), suffix: '' },
+    { t: T - 0.01, text: '1950', roll: 0.01 },
   ], { roll: 0.5, stagger: 0.03 });
 
   const blocks = [
@@ -176,7 +207,7 @@ export function buildScript(ctx) {
       exposure: 1.0,
       ca: 0.0016 + punch * 0.002,
       glitch,
-      flash: ign * 0.22 + pre * 0.25,
+      flash: 0,
       flashColor: new THREE.Color(1.0, 0.55, 0.45),
       vignette: 0.55,
       fade: 1,
@@ -187,28 +218,30 @@ export function buildScript(ctx) {
   // ------------------------------------------------------------------- state
   const state = (t, s) => {
     const tau = t > T / 2 ? t - T : t;
-    const escape = smoothstep(B('b54.4'), B('b55.3'), t);
-    const ignite = tau >= 0 ? clamp(tau / 0.06) : 0;
+    const rewind = t >= B('b57.1');
+    const escape = rewind ? 1 - smoothstep(B('b57.1'), B('b57.2'), t) : smoothstep(B('b54.4'), B('b55.3'), t);
+    const flare = tau >= 0 ? Math.exp(-tau / 0.35) : Math.exp(tau / 0.07); // peaks on the stab at frame 0
     return {
       t, s,
-      head: { size: 0.55 + Math.exp(-Math.max(0, tau) / 0.45) * 1.6 * ignite, glow: 2.2, core: 7, minPx: 20, alpha: (1 - escape) * (tau >= 0 ? ignite : 1), light: 5 },
+      head: { size: 0.55 + flare * 0.9, glow: 2.2 + flare * 1.2, core: 7, minPx: 20, alpha: 1 - escape, light: 5 },
       trailWidth: 2.4,
-      trailFade: 1 - smoothstep(B('b57.1'), B('b58.3'), t),
-      trailDissolve: smoothstep(B('b57.1'), T, t),
+      trailFade: 1,
+      trailDissolve: 0,
+      rewind,
       trailGain: 1,
       starGain: 1 + beat.e('onset', t) * 0.35,
-      dissolve: smoothstep(B('b57.1'), B('b58.3'), t),
+      dissolve: smoothstep(B('b57.1'), B('b58.2'), t),
       fx: fx(t),
     };
   };
 
   // ------------------------------------------------------------------- HUD
   const drawHud = (t, hud, project, st) => {
-    const dateAlpha = 1 - envelope(t, B('b55.1'), B('b57.1'), 0.4, 0.4);
+    const dateAlpha = 1 - envelope(t, B('b55.1'), B('b57.3'), 0.4, 0.35);
     hud.odometer(date.cells(t), 540, 238, { size: 92, alpha: dateAlpha });
     for (const b of blocks) {
       if (t < b.t0 - 0.05 || t > b.t1 + 0.6) continue;
-      const pin = clamp((t - b.t0) / 0.45), pout = 1 - clamp((t - b.t1) / 0.35);
+      const pin = clamp((t - b.t0) / 0.28), pout = 1 - clamp((t - b.t1) / 0.35);
       const a = Math.min(1, pout);
       if (a <= 0) continue;
       hud.font('Inter', 50, 600);
@@ -229,7 +262,7 @@ export function buildScript(ctx) {
     }
   };
 
-  return { headS, state, camera: (t) => track.at(t), drawHud, blocks, date };
+  return { headS, state, camera, drawHud, blocks, date };
 }
 
 function wrap(hud, text, x, y, maxW, size, alpha, lh) {

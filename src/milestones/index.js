@@ -1,9 +1,20 @@
-import { placeholder } from './placeholder.js';
+import { shannon } from './shannon.js';
+import { deepblue } from './deepblue.js';
+import { alphago } from './alphago.js';
+import { imo2024, imo2025 } from './imo.js';
+import { erdos } from './erdos.js';
+import { jacobian } from './jacobian.js';
+import { percolation } from './percolation.js';
+import { navierstokes } from './navierstokes.js';
+import { manuscripts } from './manuscripts.js';
+import { yangmills } from './yangmills.js';
+import { ethOpenAI, ethClaude } from './eth.js';
+import { pullback } from './pullback.js';
+import { decades } from './decades.js';
 
 export function createMilestones(ctx) {
   return [
-    ['deepblue', 'IBM Deep Blue'], ['alphago', 'AlphaGo'], ['imo2024', 'AlphaProof + AlphaGeometry 2'],
-    ['imo2025', 'Gemini Deep Think'], ['erdos', 'OpenAI'], ['jacobian', 'Claude'], ['percolation', 'Anthropic'],
-    ['navierstokes', 'OpenAI'], ['manuscripts', 'OpenAI'], ['yangmills', 'OpenAI'], ['eth_openai', 'OpenAI'], ['eth_claude', 'Claude'],
-  ].map(([id, label]) => placeholder(ctx, id, label));
+    shannon(ctx), deepblue(ctx), alphago(ctx), imo2024(ctx), imo2025(ctx), erdos(ctx), jacobian(ctx), percolation(ctx),
+    navierstokes(ctx), manuscripts(ctx), yangmills(ctx), ethOpenAI(ctx), ethClaude(ctx), pullback(ctx), decades(ctx),
+  ];
 }

@@ -1,0 +1,189 @@
+{
+ "shannon": {
+  "file": "assets/tex/shannon.svg",
+  "wEx": 7.239,
+  "hEx": 2.05,
+  "viewBox": [
+   0,
+   -883.9,
+   3199.4,
+   905.9
+  ]
+ },
+ "ns": {
+  "file": "assets/tex/ns.svg",
+  "wEx": 44.086,
+  "hEx": 2.262,
+  "viewBox": [
+   0,
+   -750,
+   19485.8,
+   1000
+  ]
+ },
+ "ns_blow": {
+  "file": "assets/tex/ns_blow.svg",
+  "wEx": 27.04,
+  "hEx": 2.262,
+  "viewBox": [
+   0,
+   -750,
+   11951.8,
+   1000
+  ]
+ },
+ "jac_F": {
+  "file": "assets/tex/jac_F.svg",
+  "wEx": 48.776,
+  "hEx": 9.167,
+  "viewBox": [
+   0,
+   -2275.9,
+   21558.8,
+   4051.8
+  ]
+ },
+ "jac_det": {
+  "file": "assets/tex/jac_det.svg",
+  "wEx": 12.07,
+  "hEx": 1.91,
+  "viewBox": [
+   0,
+   -694,
+   5334.8,
+   844
+  ]
+ },
+ "jac_eq": {
+  "file": "assets/tex/jac_eq.svg",
+  "wEx": 40.593,
+  "hEx": 2.748,
+  "viewBox": [
+   0,
+   -864.9,
+   17942.2,
+   1214.4
+  ]
+ },
+ "perc": {
+  "file": "assets/tex/perc.svg",
+  "wEx": 8.988,
+  "hEx": 2.262,
+  "viewBox": [
+   0,
+   -750,
+   3972.7,
+   1000
+  ]
+ },
+ "perc_pc": {
+  "file": "assets/tex/perc_pc.svg",
+  "wEx": 11.321,
+  "hEx": 1.971,
+  "viewBox": [
+   0,
+   -677,
+   5003.7,
+   871
+  ]
+ },
+ "erdos_old": {
+  "file": "assets/tex/erdos_old.svg",
+  "wEx": 15.473,
+  "hEx": 2.7,
+  "viewBox": [
+   0,
+   -943.3,
+   6838.9,
+   1193.3
+  ]
+ },
+ "erdos_new": {
+  "file": "assets/tex/erdos_new.svg",
+  "wEx": 11.729,
+  "hEx": 2.647,
+  "viewBox": [
+   0,
+   -920,
+   5184.2,
+   1170
+  ]
+ },
+ "ym": {
+  "file": "assets/tex/ym.svg",
+  "wEx": 28.148,
+  "hEx": 5.172,
+  "viewBox": [
+   0,
+   -1361,
+   12441.3,
+   2285.9
+  ]
+ },
+ "eth": {
+  "file": "assets/tex/eth.svg",
+  "wEx": 22.304,
+  "hEx": 4.07,
+  "viewBox": [
+   0,
+   -1149.5,
+   9858.6,
+   1799
+  ]
+ },
+ "eth_wall": {
+  "file": "assets/tex/eth_wall.svg",
+  "wEx": 2.989,
+  "hEx": 2.081,
+  "viewBox": [
+   0,
+   -920,
+   1321.2,
+   920
+  ]
+ },
+ "imo24": {
+  "file": "assets/tex/imo24.svg",
+  "wEx": 23.476,
+  "hEx": 1.83,
+  "viewBox": [
+   0,
+   -727,
+   10376.6,
+   809
+  ]
+ },
+ "imo25": {
+  "file": "assets/tex/imo25.svg",
+  "wEx": 12.369,
+  "hEx": 2.262,
+  "viewBox": [
+   0,
+   -750,
+   5466.9,
+   1000
+  ]
+ },
+ "alphago": {
+  "file": "assets/tex/alphago.svg",
+  "wEx": 9.528,
+  "hEx": 2.773,
+  "viewBox": [
+   0,
+   -864.9,
+   4211.3,
+   1225.5
+  ]
+ },
+ "deepblue": {
+  "file": "assets/tex/deepblue.svg",
+  "wEx": 18.434,
+  "hEx": 2.565,
+  "viewBox": [
+   0,
+   -883.9,
+   8148,
+   1133.9
+  ]
+ }
+}

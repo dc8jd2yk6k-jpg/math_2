@@ -58,7 +58,7 @@ const COMPOSITE = /* glsl */`
 uniform sampler2D tScene; uniform sampler2D tBloom; uniform sampler2D tHud;
 uniform vec2 uRes; uniform float uBloom; uniform float uExposure; uniform float uCA; uniform float uGlitch;
 uniform float uSeed; uniform float uFlash; uniform vec3 uFlashColor; uniform float uVignette; uniform float uFade;
-uniform float uHudGlitch; uniform float uSaturation;
+uniform float uHudGlitch; uniform float uSaturation; uniform float uScrim;
 varying vec2 vUv;
 float hash(float n) { return fract(sin(n) * 43758.5453123); }
 float hash2(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -96,6 +96,7 @@ void main() {
   float v = smoothstep(1.25, 0.25, length(d * vec2(1.0, 0.82)) * 1.35);
   col *= mix(1.0, v, uVignette);
   col = toSRGB(col);
+  col *= 1.0 - uScrim * smoothstep(0.62, 0.92, vUv.y) * (1.0 - smoothstep(0.985, 1.0, vUv.y) * 0.3);
   vec4 h = texture2D(tHud, hudUv);
   if (uGlitch > 0.001 && uHudGlitch > 0.0) {
     float hr = texture2D(tHud, hudUv + vec2(0.004 * uGlitch, 0.0)).a;
@@ -131,7 +132,7 @@ export class Post {
       tScene: { value: this.accumRT.texture }, tBloom: { value: this.mipRT[0].texture }, tHud: { value: null },
       uRes: { value: new THREE.Vector2(W, H) }, uBloom: { value: 0.9 }, uExposure: { value: 1 }, uCA: { value: 0.002 },
       uGlitch: { value: 0 }, uSeed: { value: 0 }, uFlash: { value: 0 }, uFlashColor: { value: new THREE.Color(1, 0.85, 0.8) },
-      uVignette: { value: 0.55 }, uFade: { value: 1 }, uHudGlitch: { value: 1 }, uSaturation: { value: 1 },
+      uVignette: { value: 0.55 }, uFade: { value: 1 }, uHudGlitch: { value: 1 }, uSaturation: { value: 1 }, uScrim: { value: 0.38 },
     });
     this.u = this.composite.material.uniforms;
   }
