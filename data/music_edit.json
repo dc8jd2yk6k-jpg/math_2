@@ -1,0 +1,20 @@
+{
+  "source": "assets/audio/source/f1_theme.m4a",
+  "analysis": "data/source_analysis.json",
+  "fps": 30,
+  "frames": 2488,
+  "sample_rate": 48000,
+  "note": "Bars/beats refer to the source grid (bar b starts at beat index 4b+1). 'to' is exclusive. The loop seam D->A is contiguous in the source recording, so it needs no splice. Splice bars were picked by beat-synchronous chroma similarity: sim(b61,b5)=0.983, sim(b25,b33)=0.996, sim(b39,b49)=0.98.",
+  "segments": [
+    { "name": "A_bigbang_decay", "from": [58, 4], "to": [61, 1], "pad_to_frame_grid": true },
+    { "name": "B_build_drop_theme", "from": [5, 1], "to": [25, 1] },
+    { "name": "C_navier_stokes", "from": [33, 1], "to": [39, 1] },
+    { "name": "D_climax_stabs", "from": [49, 1], "to": [58, 4] }
+  ],
+  "cuts": [
+    { "between": ["A_bigbang_decay", "B_build_drop_theme"], "out_fade_ms": 260, "in_fade_ms": 30, "lead_ms": 25 },
+    { "between": ["B_build_drop_theme", "C_navier_stokes"], "out_fade_ms": 40, "in_fade_ms": 40, "lead_ms": 35 },
+    { "between": ["C_navier_stokes", "D_climax_stabs"], "out_fade_ms": 40, "in_fade_ms": 40, "lead_ms": 35 }
+  ],
+  "headroom_dbtp": -1.0
+}

@@ -1,0 +1,19 @@
+{
+  "name": "the-curve",
+  "version": "1.0.0",
+  "private": true,
+  "description": "THE CURVE — AI x Mathematics, 1950 -> 2026. A one-shot, beat-locked, seamlessly looping vertical short rendered with Three.js.",
+  "type": "module",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "tex": "node tools/tex2svg.mjs",
+    "audio": "python3 -I tools/build_soundtrack.py",
+    "render": "node tools/render.mjs",
+    "preview": "node tools/render.mjs --preset preview"
+  },
+  "dependencies": {
+    "chess.js": "1.4.0",
+    "mathjax-full": "3.2.2",
+    "three": "0.186.1"
+  }
+}
