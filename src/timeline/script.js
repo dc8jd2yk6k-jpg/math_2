@@ -148,7 +148,7 @@ export function buildScript(ctx) {
     const a = curve.at(s);
     const p = W(a.p.x, a.p.y, 0), tan = W(a.T.x, a.T.y, 0).normalize();
     const pos = p.clone().addScaledVector(tan, d * 0.35 * f).add(W(0, d * 0.3, d * 0.75 + 6.5 * (1 - f)));
-    const look = p.clone().addScaledVector(tan, -d * 0.15 * f);
+    const look = p.clone().addScaledVector(tan, -d * 0.04 * f);
     return pose(pos, look, Y.clone(), 50, 0);
   };
   // 1950: the ignition, square to the rings, then sliding right with the chess era
@@ -226,7 +226,7 @@ export function buildScript(ctx) {
   const track = new Track()
     // opening: inside the eye, pull out, then fall with the rewinding head
     .add(0, dive, { blend: 0 })
-    .add(B('b59.4', 0.15), fall, { blend: 0.8 })
+    .add(B('b59.4', 0.05), fall, { blend: 0.6 })
     .add(B('b60.4', -0.1), ignite, { blend: 0.8 })
     // the chess era: glide low along the avenue, the head running ahead
     .add(B('b6.2'), glide(

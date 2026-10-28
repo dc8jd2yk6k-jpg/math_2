@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import { base } from './common.js';
 import { FatLines, Dots } from '../core/lines.js';
-import { clamp, ease, TAU } from '../core/math.js';
+import { clamp, ease, smoothstep, TAU } from '../core/math.js';
 
 const V2 = (x, y) => new THREE.Vector2(x, y);
 const WHITE = new THREE.Color(1, 0.95, 0.97);
@@ -18,7 +18,7 @@ const RED = new THREE.Color(1, 0.12, 0.08);
 
 function medal(ctx, color, metal) {
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color, metalness: 1, roughness: 0.22, envMap: ctx.envMap, envMapIntensity: 1.4 });
+  const mat = new THREE.MeshStandardMaterial({ color, metalness: 1, roughness: 0.55, envMap: ctx.envMap, envMapIntensity: 0.3 });
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.1, 64), mat);
   disc.rotation.x = Math.PI / 2;
   const rim = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.05, 12, 64), mat);
@@ -29,7 +29,7 @@ function medal(ctx, color, metal) {
   r1.position.set(-0.2, 1.35, -0.05); r1.rotation.z = -0.22;
   const r2 = r1.clone(); r2.position.x = 0.2; r2.rotation.z = 0.22;
   g.add(disc, rim, inner, r1, r2);
-  const light = new THREE.PointLight(0xffffff, 14, 6, 1.6);
+  const light = new THREE.PointLight(0xffffff, 0.6, 6, 1.6);
   light.position.set(0.8, 1.2, 2.2);
   g.add(light);
   g.userData.metal = metal;
@@ -126,7 +126,7 @@ export function imo2024(ctx) {
   const dots = new Dots(Object.entries(pts).map(([k, v]) => ({ p: P3(v), size: 7, t0: bt(when[k], 0.4) })), { gain: 4 });
   m.group.add(art.mesh, dots.mesh);
   const md = medal(ctx, 0xd9dde3, 'silver');
-  md.position.copy(P3(V2(5.6, 7.4)));
+  md.position.copy(P3(V2(7.4, 5.4)));
   m.group.add(md);
 
   m.update = (t, st) => {
@@ -134,10 +134,10 @@ export function imo2024(ctx) {
     const vis = t > m.tIn - 1 && life > 0.001;
     art.set(t, ctx, vis ? life : 0);
     dots.set(t, ctx, vis ? life : 0);
-    const k = clamp((t - bt('b16.4')) / 0.4);
+    const k = clamp((t - bt('b16.4')) / 0.4) * (1 - smoothstep(bt('b17.1', -1.2), bt('b17.1', -0.2), t));
     md.visible = k > 0 && life > 0.001;
     md.userData.light.visible = md.visible && t < m.tOut + 3;
-    md.scale.setScalar(Math.max(0.001, 1.7 * ease.outBack(k) * life));
+    md.scale.setScalar(Math.max(0.001, 1.35 * ease.outBack(k) * life));
     md.rotation.set(0, Math.sin(t * 0.9) * 0.5 + (1 - k) * 3, 0);
   };
   m.labels = (t, hud, project) => {
@@ -184,7 +184,7 @@ export function imo2025(ctx) {
   const art = new FatLines(lines, { width: 1.8 });
   m.group.add(dots.mesh, art.mesh);
   const md = medal(ctx, 0xf0c35a, 'gold');
-  md.position.copy(P3(V2(5.4, 7.0)));
+  md.position.copy(P3(V2(5.9, 4.4)));
   m.group.add(md);
 
   m.update = (t, st) => {
@@ -192,10 +192,10 @@ export function imo2025(ctx) {
     const vis = t > m.tIn - 1 && life > 0.001;
     art.set(t, ctx, vis ? life : 0);
     dots.set(t, ctx, vis ? life : 0);
-    const k = clamp((t - B('b18.4')) / 0.4);
+    const k = clamp((t - B('b18.3')) / 0.4) * (1 - smoothstep(B('b19.1', -1.0), B('b19.1', -0.1), t));
     md.visible = k > 0 && life > 0.001;
     md.userData.light.visible = md.visible && t < m.tOut + 3;
-    md.scale.setScalar(Math.max(0.001, 1.7 * ease.outBack(k) * life));
+    md.scale.setScalar(Math.max(0.001, 1.35 * ease.outBack(k) * life));
     md.rotation.set(0, Math.sin(t * 0.9) * 0.5 + (1 - k) * 3, 0);
   };
   m.labels = (t, hud, project) => {

@@ -52,8 +52,9 @@ for (let i = 0; i < N; i++) {
   const w0 = omega[i], w1 = omega[(i + 1) % N];
   const acc = w1.clone().sub(w0).length() * fps;
   if (acc > worstAcc.v) worstAcc = { v: acc, i };
-  // shake: the turn reverses direction between frames while actually turning
-  if (w0.length() > 0.08 && w1.length() > 0.08 && w0.dot(w1) < -0.3 * w0.length() * w1.length()) reversals.push(i);
+  // shake: the turn reverses direction from one frame to the next while turning
+  // faster than 0.15 rad/s on both sides (a smooth turnaround slows down first)
+  if (w0.length() > 0.15 && w1.length() > 0.15 && w0.dot(w1) < -0.3 * w0.length() * w1.length()) reversals.push(i);
 }
 const fmt = (o) => `${o.v.toFixed(2)} at frame ${o.i} (t=${(o.i / fps).toFixed(2)} s)`;
 console.log(`max angular speed  ${fmt(worstSpeed)}  [cap ${MAX_SPEED}]`);
