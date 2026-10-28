@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { base } from './common.js';
 import { FatLines } from '../core/lines.js';
 import { Head } from '../world/head.js';
-import { clamp, ease, mulberry32, TAU } from '../core/math.js';
+import { clamp, mulberry32 } from '../core/math.js';
 
 const SHARD_VERT = /* glsl */`
 attribute vec3 aC; attribute vec4 aR; // cell centre, random dir + spin

@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { base } from './common.js';
 import { FatLines } from '../core/lines.js';
-import { clamp, ease, mulberry32, TAU } from '../core/math.js';
+import { clamp, mulberry32, TAU } from '../core/math.js';
 
 const VERT = /* glsl */`
 attribute vec4 aP; // r0, theta0, z0, seed

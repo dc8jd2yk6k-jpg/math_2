@@ -5,7 +5,7 @@
 
 import * as THREE from 'three';
 import { base } from './common.js';
-import { clamp, mulberry32, TAU } from '../core/math.js';
+import { clamp, mulberry32 } from '../core/math.js';
 
 const VERT = /* glsl */`
 attribute vec2 aUv; attribute vec4 aD; // index, lean flag, rnd1, rnd2

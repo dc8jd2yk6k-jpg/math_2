@@ -2,10 +2,10 @@
 // resolved through the beatmap, so picture is locked to the edit frame-accurately.
 
 import * as THREE from 'three';
-import { YEARS, SX } from '../core/curve.js';
+import { YEARS } from '../core/curve.js';
 import { Track, follow, orbit, pose, shake } from '../core/camera.js';
 import { DateTrack } from '../core/hud.js';
-import { clamp, ease, envelope, lerp, pchip, smoothstep, keyframes } from '../core/math.js';
+import { clamp, ease, envelope, lerp, pchip, smoothstep } from '../core/math.js';
 
 export const COPY = {
   shannon: { title: 'Claude Shannon', sub: 'Programming a Computer for Playing Chess · game tree ≈ 10¹²⁰', chip: '' },

@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { base } from './common.js';
 import { FatLines } from '../core/lines.js';
-import { clamp, ease, mulberry32 } from '../core/math.js';
+import { clamp, mulberry32 } from '../core/math.js';
 
 const PC = 0.2488;
 
