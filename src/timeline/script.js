@@ -53,28 +53,32 @@ export function buildScript(ctx) {
   const tau = (t) => (t > T / 2 ? t - T : t);
 
   // ------------------------------------------------------------ head schedule
+  // Travel and hold: at every milestone the head lands on a downbeat and stays put
+  // while the camera explores; between milestones it travels in one eased move.
+  // Repeated values make the monotone spline flat, so a hold is exactly still.
+  const sM = (id) => sY(YEARS[id]);
+  const r0 = B('b59.4');
+  const hold = (t0, t1, sv) => [[t0, sv], [t1, sv]];
   const anchors = [
-    // opening: escaped above the frame, the head drops back into the vortex and
-    // rewinds down the whole line, coming to rest at the origin
-    [0, endS], [B('b59.3'), endS - 5], [B('b59.4', -0.15), sNS + 32], [B('b59.4', 0.25), sNS],
-    [B('b60.1'), sY(2026.0)], [B('b60.2'), sY(2016.5)], [B('b60.3'), sY(1984)], [B('b60.3', 0.5), 25], [B('b60.4'), 2.0], [B('b60.4', 0.5), 0.3],
-    // 1950: ignition on the b5 downbeat, then the chess era
-    [B('b5.1'), 0], [B('b5.2'), 1.2], [B('b5.3'), sY(1954)], [B('b6.1'), sY(1966)], [B('b6.3'), sY(1981)],
-    [B('b7.1'), sY(1995.7)], [B('b8.1'), sY(YEARS.deepblue)], [B('b9.1'), sY(1998.9)],
-    [B('b10.1'), sY(2013.2)], [B('b11.1'), sY(2015.6)], [B('b12.1'), sY(YEARS.alphago)], [B('b13.1'), sY(2016.8)],
-    [B('b14.1'), sY(2019.6)], [B('b15.1'), sY(2024.35)], [B('b15.3'), sY(YEARS.imo2024)], [B('b16.3'), sY(2024.8)],
-    [B('b17.1'), sY(2025.32)], [B('b17.3'), sY(YEARS.imo2025)], [B('b18.3'), sY(2025.78)],
-    [B('b19.1'), sY(2026.25)], [B('b19.3'), sY(YEARS.erdos)], [B('b20.3'), sY(YEARS.erdos) + 9],
-    [B('b21.1'), sY(YEARS.jacobian) - 6], [B('b21.3'), sY(YEARS.jacobian)], [B('b22.3'), sY(YEARS.jacobian) + 9],
-    [B('b23.1'), sY(YEARS.percolation) - 6], [B('b23.3'), sY(YEARS.percolation)], [B('b24.3'), sY(YEARS.percolation) + 8],
-    // Navier–Stokes: the head climbs the axis and reaches the singular point at T*
-    [B('b33.1'), sNS - 26], [B('b35.1'), sNS - 12], [B('b37.1'), sNS], [B('b38.1'), sNS + 12], [B('b38.4'), sNS + 16],
-    [B('b49.1'), sY(YEARS.manuscripts) - 7], [B('b49.3'), sY(YEARS.manuscripts)], [B('b50.3'), sY(YEARS.manuscripts) + 8],
-    [B('b51.1'), sY(YEARS.yangmills) - 6], [B('b51.3'), sY(YEARS.yangmills)], [B('b52.3'), sY(YEARS.yangmills) + 8],
-    [B('b53.1'), sY(YEARS.eth_openai) - 4], [B('b53.3'), sY(YEARS.eth_openai)],
-    [B('b54.1'), sY(YEARS.eth_claude) - 4], [B('b54.3'), sY(YEARS.eth_claude)],
+    // opening: escaped above the frame, the head drops back through the vortex and
+    // rewinds the whole line in about 1.3 s, coming to rest at the origin
+    [0, endS], [B('b59.3'), endS - 5],
+    [r0 + 0.06, sNS], [r0 + 0.42, sNS - 90], [r0 + 0.77, 160], [r0 + 1.07, 80], [r0 + 1.27, 25], [r0 + 1.44, 4],
+    ...hold(B('b60.3'), B('b6.2'), 0),                  // 1950: rings gather, ignite on b5.1
+    ...hold(B('b7.1'), B('b9.4'), sM('deepblue')),     // 1950 -> 1997 on the roll
+    ...hold(B('b10.2'), B('b13.4'), sM('alphago')),
+    ...hold(B('b15.1'), B('b16.4'), sM('imo2024')),    // up the slope through the lull
+    ...hold(B('b17.1'), B('b18.4'), sM('imo2025')),
+    ...hold(B('b19.1'), B('b20.4'), sM('erdos')),
+    ...hold(B('b21.1'), B('b22.4'), sM('jacobian')),
+    ...hold(B('b23.1'), B('b24.4'), sM('percolation')),
+    ...hold(B('b33.1'), B('b38.4'), sNS),              // at the singular point through T*
+    ...hold(B('b49.1'), B('b50.4'), sM('manuscripts')),
+    ...hold(B('b51.1'), B('b52.4'), sM('yangmills')),
+    ...hold(B('b53.1'), B('b53.4'), sM('eth_openai')), // breaks the first barrier on the hit
+    ...hold(B('b54.1'), B('b54.4'), sM('eth_claude')), // and the second
     // the escape: up the asymptote and out of the top of the frame, for good
-    [B('b54.4'), topS], [B('b55.2'), topS + 170], [B('b56.1'), endS], [T, endS],
+    [B('b55.2'), topS + 170], [B('b56.1'), endS], [T, endS],
   ];
   const headSpline = pchip(anchors.map((a) => a[0]), anchors.map((a) => a[1]));
   const headS = (t) => clamp(headSpline.f(t), 0, curve.length);
@@ -142,7 +146,7 @@ export function buildScript(ctx) {
   const fall = (t) => {
     const s = headS(t);
     // distance and side-swing by time (not by head speed), so they change monotonically
-    const f = 1 - smoothstep(B('b60.3'), B('b60.4', 0.6), t);
+    const f = 1 - smoothstep(r0 + 0.95, r0 + 1.7, t);
     const d = lerp(7, 22, f);
     // the early weave is ignored (point and tangent projected to z = 0) so nothing wobbles
     const a = curve.at(s);
@@ -151,12 +155,21 @@ export function buildScript(ctx) {
     const look = p.clone().addScaledVector(tan, -d * 0.04 * f);
     return pose(pos, look, Y.clone(), 50, 0);
   };
-  // 1950: the ignition, square to the rings, then sliding right with the chess era
+  // 1950: the head rests at the centre of Shannon's rings; the camera swings from the
+  // side round toward the rings' axis, so the ellipses open into a portal
   const p0 = curve.at(0).p.clone();
   const ignite = (t) => {
-    const u = smoothstep(B('b5.1'), B('b6.4'), t);
-    const c = p0.clone().add(W(lerp(0.6, 26, ease.inQuad(u)), lerp(0.2, 1.6, u), 0));
-    return pose(c.clone().add(W(lerp(-1.6, -9, u), lerp(1.0, 2.6, u), lerp(9.5, 10.5, u))), c, Y.clone(), lerp(44, 50, u), 0);
+    const u = ease.inOutSine(smoothstep(B('b60.3'), B('b6.2'), t));
+    return sphere(p0.clone().add(W(0.3, 0, 0)), lerp(10.5, 8.0, u), lerp(-0.25, 0.75, u), lerp(0.12, 0.2, u), lerp(46, 50, u), p0.clone().add(W(0.3, 0, 0)));
+  };
+  // travel shots: follow the moving head along the line, a little behind. phi places
+  // the camera around the line: 0 = the +z side, pi = the -z side, pi/2 = above the curve
+  const travel = ({ back = 6, side = 9, up = 2, ahead = 5, fov = 52, phi = () => 0 } = {}) => (t) => {
+    const a = curve.at(headS(t));
+    const p = W(a.p.x, a.p.y, 0), tan = W(a.T.x, a.T.y, 0).normalize();
+    const nrm = W(-tan.y, tan.x, 0), f = phi(t);
+    const off = W(0, 0, Math.cos(f) * side).addScaledVector(nrm, Math.sin(f) * side).add(W(0, up, 0));
+    return pose(p.clone().addScaledVector(tan, -back).add(off), p.clone().addScaledVector(tan, ahead), Y.clone(), fov, 0);
   };
 
   // Navier–Stokes event: collapse to T* on the b37 downbeat, then the burst
@@ -214,11 +227,6 @@ export function buildScript(ctx) {
     const a = at(id), u = k(t);
     return orbit(center, { radius, az: lerp(az0, az1, u), el: lerp(el0, el1, u), fov, frame: a, look: center.clone().add(lookOff) });
   };
-  // a glide between two poses over [t0, t1], independent of the head
-  const glide = (a, b, t0, t1, e = ease.inOutSine) => (t) => {
-    const u = e(clamp((t - t0) / (t1 - t0)));
-    return pose(a.pos.clone().lerp(b.pos, u), a.look.clone().lerp(b.look, u), Y.clone(), lerp(a.fov, b.fov, u), 0);
-  };
   const db = at('deepblue'), ag = at('alphago');
   const dbBoard = db.p.clone().addScaledVector(db.N, -1.32);
   const agBoard = ag.p.clone().addScaledVector(ag.N, -0.62);
@@ -227,25 +235,22 @@ export function buildScript(ctx) {
     // opening: inside the eye, pull out, then fall with the rewinding head
     .add(0, dive, { blend: 0 })
     .add(B('b59.4', 0.05), fall, { blend: 0.6 })
-    .add(B('b60.4', -0.1), ignite, { blend: 0.8 })
-    // the chess era: glide low along the avenue, the head running ahead
-    .add(B('b6.2'), glide(
-      pose(W(18, 2.4, 9.5), W(40, 1.2, 0), Y, 50), pose(W(96, 3.0, 8.5), W(122, 1.0, -1), Y, 52), B('b6.2'), B('b7.1', -1.0)), { blend: 1.2 })
+    .add(r0 + 1.3, ignite, { blend: 0.9 })
+    // 1950 -> 1997: chase the head on the roll, landing over Deep Blue's board
+    .add(B('b6.2', -0.4), travel({ back: 1, side: 9, up: 2.2, ahead: 3, fov: 54 }), { blend: 1.0 })
     // Deep Blue: low over the pieces, then rise to see the search tree burst
-    .add(B('b7.1', -1.0), (t) => {
+    .add(B('b7.1', -0.4), (t) => {
       const u = S('b7.1', 'b8.1', t);
       return pose(dbBoard.clone().add(W(lerp(-5.6, -4.2, u), lerp(1.7, 1.5, u), lerp(3.6, 3.0, u))), dbBoard.clone().add(W(0.6, 0.6, -0.2)), Y.clone(), 52, 0);
-    }, { blend: 1.0 })
+    }, { blend: 0.8 })
     .add(B('b8.1'), frameOrb('deepblue', dbBoard, { radius: 7.2, az0: Math.PI + 0.55, az1: Math.PI + 1.15, el0: 0.32, el1: 0.66, fov: 50, k: (t) => ease.inOutCubic(S('b8.1', 'b9.4', t)), lookOff: W(0, 1.4, 0) }), { blend: 1.6 })
+    // 1997 -> 2016
+    .add(B('b9.4', -0.2), travel({ back: 7, side: 9, up: 2.5, ahead: 6, phi: () => Math.PI }), { blend: 1.0 })
     // AlphaGo: high over the board
-    .add(B('b10.1'), frameOrb('alphago', agBoard, { radius: 8.2, az0: Math.PI + 0.35, az1: Math.PI + 0.85, el0: 1.0, el1: 0.8, fov: 46, k: (t) => ease.inOutSine(S('b10.1', 'b13.4', t)) }), { blend: 1.6 })
-    // the lull before the drop: slide up beside the year gates, the head racing ahead
-    .add(B('b13.2'), (t) => {
-      const u = ease.inOutSine(S('b13.2', 'b15.1', t));
-      const a = curve.at(sY(lerp(2016.9, 2022.6, u)));
-      const b = curve.at(sY(lerp(2018.2, 2024.0, u)));
-      return pose(a.p.clone().add(W(-3, -2.5, 13)), b.p.clone(), Y.clone(), 52, 0);
-    }, { blend: 2.0 })
+    .add(B('b10.2', -0.3), frameOrb('alphago', agBoard, { radius: 8.2, az0: Math.PI + 0.35, az1: Math.PI + 0.85, el0: 1.0, el1: 0.8, fov: 46, k: (t) => ease.inOutSine(S('b10.2', 'b13.4', t)) }), { blend: 1.0 })
+    // 2016 -> 2024: follow the head up the steepening slope through the lull
+    // (the camera swings over the line from the -z side to the +z side the IMO faces)
+    .add(B('b13.4', -0.3), travel({ back: 9, side: 7, up: 1, ahead: 2, fov: 50, phi: (t) => Math.PI * (1 - ease.inOutSine(S('b13.4', 'b15.1', t))) }), { blend: 1.2 })
     // IMO 2024: square-on to the construction, close
     .add(B('b15.1', -0.2), orb(() => P('imo2024').add(W(2.1, -1.64, 0)), { d0: 13.5, d1: 12.6, az0: 0.06, az1: -0.05, el0: 0.03, el1: -0.02, fov: 46, k: (t) => S('b15.1', 'b17.1', t) }), { blend: 0.6, e: ease.inOutSine })
     // IMO 2025
@@ -289,14 +294,14 @@ export function buildScript(ctx) {
   const yearOfHead = (t) => curve.yearAt(headS(t));
   const date = new DateTrack([
     { t: 0, text: '2026.09.08' },
-    { t: B('b59.4', -0.5), text: '2026', roll: 0.35 },
-    { t: B('b59.4', 0.15), value: (t) => Math.max(1950, Math.min(2026.68, yearOfHead(t))) },
-    { t: B('b60.4'), text: '1950', roll: 0.01 },
-    { t: B('b5.2'), value: (t) => Math.min(1996.999, Math.max(1950, yearOfHead(t))) },
-    { t: B('b7.1', -0.8), text: '1997.05', roll: 0.8 },
-    { t: B('b9.3'), value: (t) => Math.min(2015.999, Math.max(1997, yearOfHead(t))) },
-    { t: B('b11.1', -0.8), text: '2016.03', roll: 0.8 },
-    { t: B('b14.1'), value: (t) => Math.min(2023.999, Math.max(2016, lerp(2016, 2024, smoothstep(B('b14.1'), B('b15.1', -0.5), t)))) },
+    { t: B('b59.4', -0.6), text: '2026', roll: 0.3 },
+    { t: r0, value: (t) => Math.max(1950, Math.min(2026.68, yearOfHead(t))) },
+    { t: B('b60.3'), text: '1950', roll: 0.01 },
+    { t: B('b6.2'), value: (t) => Math.min(1996.999, Math.max(1950, yearOfHead(t))) },
+    { t: B('b7.1', -0.5), text: '1997.05', roll: 0.5 },
+    { t: B('b9.4'), value: (t) => Math.min(2015.999, Math.max(1997, yearOfHead(t))) },
+    { t: B('b10.2', -0.5), text: '2016.03', roll: 0.5 },
+    { t: B('b13.4'), value: (t) => Math.min(2023.999, Math.max(2016, yearOfHead(t))) },
     { t: B('b15.1', -0.5), text: '2024.07', roll: 0.5 },
     { t: B('b17.1', -0.5), text: '2025.07', roll: 0.5 },
     { t: B('b19.1', -0.5), text: '2026.05.20', roll: 0.5 },
@@ -309,7 +314,7 @@ export function buildScript(ctx) {
   ], { roll: 0.5, stagger: 0.03 });
 
   const blocks = [
-    ['shannon', B('b5.1'), B('b6.1')], ['deepblue', B('b7.1'), B('b9.4')], ['alphago', B('b11.1'), B('b13.4')],
+    ['shannon', B('b5.1'), B('b6.1')], ['deepblue', B('b7.1'), B('b9.4')], ['alphago', B('b10.2'), B('b13.4')],
     ['imo2024', B('b15.1'), B('b16.4')], ['imo2025', B('b17.1'), B('b18.4')], ['erdos', B('b19.1'), B('b20.4')],
     ['jacobian', B('b21.1'), B('b22.4')], ['percolation', B('b23.1'), B('b24.4')], ['navierstokes', B('b33.1'), B('b38.4')],
     ['manuscripts', B('b49.1'), B('b50.4')], ['yangmills', B('b51.1'), B('b52.4')], ['eth_openai', B('b53.1'), B('b53.4', 0.6)],
@@ -339,16 +344,20 @@ export function buildScript(ctx) {
 
   // ------------------------------------------------------------------- state
   const state = (t, s) => {
-    const rewind = t < B('b60.4');
-    const ign = t >= B('b5.1') ? Math.exp(-(t - B('b5.1')) / 0.35) : smoothstep(B('b60.4'), B('b5.1'), t) * 0.25;
+    const rewind = t < B('b60.3');
+    const ign = t >= B('b5.1') ? Math.exp(-(t - B('b5.1')) / 0.35) : smoothstep(B('b60.3'), B('b5.1'), t) * 0.25;
     // near plane follows the distance to the singular point while inside the vortex
     const dS = ctx.film.camera.position.distanceTo(PS);
     const near = clamp(dS * 0.02, 0.0012, 0.06);
+    // no lines inside the vortex: around the loop the line and dot fade well before the
+    // eye; during the event only once the camera is inside
+    const inLoop = t >= B('b57.1', -0.4) || t < r0 + 1.0;
+    const lineVis = inLoop ? smoothstep(45, 90, dS) : smoothstep(4, 14, dS);
     return {
       t, s,
-      head: { size: 0.35 + ign * 0.3, glow: 1.4 + ign * 1.2, core: 6 + ign * 4, minPx: 22, maxPx: 52 + ign * 30, alpha: 1, light: 2 },
+      head: { size: 0.35 + ign * 0.3, glow: 1.4 + ign * 1.2, core: 6 + ign * 4, minPx: 22, maxPx: 52 + ign * 30, alpha: inLoop ? lineVis : 1, light: 2 },
       trailWidth: 2.2,
-      trailFade: 1,
+      trailFade: lineVis,
       trailDissolve: 0,
       rewind,
       milestoneTime: rewind ? t + T : t,

@@ -1,13 +1,10 @@
 // 2026.10.27 — the Exponential Time Hypothesis (3-SAT needs 2^(delta n) time) is
 // refuted twice within hours: first by OpenAI, then by Claude (Anthropic), "A 2^o(n)
 // Time Algorithm for 3-SAT". Each result is an exponential barrier across the line,
-// a glowing lattice labelled 2^(delta n), that shatters on the hit. The second
-// arrives as a rival comet on a parallel track.
+// a glowing lattice labelled 2^(delta n), that the head breaks on the hit.
 
 import * as THREE from 'three';
 import { base } from './common.js';
-import { FatLines } from '../core/lines.js';
-import { Head } from '../world/head.js';
 import { clamp, mulberry32 } from '../core/math.js';
 
 const SHARD_VERT = /* glsl */`
@@ -87,8 +84,8 @@ export function ethOpenAI(ctx) {
     if (p.visible) hud.tex(ctx.assets.tex.eth_wall, p.x, p.y - 40, 56, { alpha: a });
     const fade = 1 - clamp((t - m.tOut) / 0.3);
     hud.tex(ctx.assets.tex.eth, 540, 1480, 64, { alpha: fade * clamp((t - hit - 0.2) / 0.3), reveal: clamp((t - hit - 0.2) / 0.4) });
-    const ph = project(ctx.film.curve.at(ctx.headS(t)).p);
-    if (ph.visible) hud.label('OpenAI', ph.x, ph.y, { size: 28, alpha: fade * clamp((t - m.tIn + 0.5) / 0.3), dot: false, dx: -34, align: 'right' });
+    const pl = project(m.local(new THREE.Vector3(0, 0, -9.5)));
+    if (pl.visible) hud.label('OpenAI', pl.x, pl.y, { size: 28, alpha: fade * clamp((t - m.tIn + 0.5) / 0.3), dot: false, dx: 0, align: 'center' });
   };
   return m;
 }
@@ -99,34 +96,18 @@ export function ethClaude(ctx) {
   const wall = barrier(54, new THREE.Color(1.0, 0.82, 0.78));
   m.group.add(wall);
   const hit = B('b54.1');
-  // the rival comet: its own track, parallel to the main line, offset sideways
-  const off = 3.2;
-  const track = [];
-  for (let k = 0; k <= 160; k++) track.push(new THREE.Vector3(-46 + (k / 160) * 52, 0, off));
-  const tStart = B('b53.3'), tArrive = hit;
-  const speed = 46 / (tArrive - tStart); // reaches its barrier (local x = 0) exactly on the hit
-  const trail = new FatLines([{ pts: track, t0: tStart, t1: tStart + 52 / speed, color: new THREE.Color(1, 0.35, 0.22), gain: 2.6, width: 2.2 }]);
-  m.group.add(trail.mesh);
-  const head = new Head({ color: new THREE.Color(1.0, 0.32, 0.12) });
-  ctx.scene.add(head.mesh, head.light);
-  const pos = new THREE.Vector3();
   m.update = (t, st) => {
     const life = m.alive(st);
     wall.visible = t > m.tIn - 2.5 && life > 0.001;
     const u = wall.material.uniforms;
     u.uT.value = t; u.uHit.value = hit;
     u.uAlpha.value = life * clamp((t - (m.tIn - 2.5)) / 1.0);
-    trail.set(t, ctx, life * (t > tStart ? 1 : 0) * (1 - clamp((t - B('b56.1')) / 1.5)));
-    pos.set(Math.min(6, -46 + speed * Math.max(0, t - tStart)), 0, off).applyMatrix4(m.group.matrix);
-    const alive = t > tStart && t < B('b55.2') ? 1 : 0;
-    head.set(pos, ctx.film.camera, ctx.H, { size: 0.3, glow: 1.3, core: 5, minPx: 18, alpha: alive * life * (1 - clamp((t - B('b54.4')) / 0.6)), light: 0 });
-    head.light.visible = false;
   };
   m.labels = (t, hud, project) => {
     if (t < m.tIn - 1.2 || t > m.tOut + 0.4) return;
     const fade = 1 - clamp((t - m.tOut) / 0.3);
-    const pp = project(pos);
-    if (pp.visible) hud.label('Claude (Anthropic)', pp.x, pp.y, { size: 28, alpha: fade * clamp((t - (m.tIn - 1)) / 0.3), dot: false, dx: 34 });
+    const pp = project(m.local(new THREE.Vector3(0, 0, -9.5)));
+    if (pp.visible) hud.label('Claude (Anthropic)', pp.x, pp.y, { size: 28, alpha: fade * clamp((t - (m.tIn - 1)) / 0.3), dot: false, dx: 0, align: 'center' });
     hud.tex(ctx.assets.tex.eth, 540, 1480, 64, { alpha: fade * clamp((t - hit) / 0.2) });
   };
   return m;

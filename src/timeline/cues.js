@@ -3,7 +3,7 @@
 export const CUES = {
   shannon: ['b5.1', 'b6.1'],
   deepblue: ['b7.1', 'b9.4'],
-  alphago: ['b11.1', 'b13.4'],
+  alphago: ['b10.2', 'b13.4'],
   imo2024: ['b15.1', 'b16.4'],
   imo2025: ['b17.1', 'b18.4'],
   erdos: ['b19.1', 'b20.4'],

@@ -1,6 +1,6 @@
 // 1950 — Claude Shannon, "Programming a Computer for Playing Chess".
-// The head, rewound to the origin, ignites on the b5 downbeat and the chess game tree
-// blooms as a radial tree on concentric rings — about 30 moves per ply, rings
+// The head, rewound to the origin, rests while the rings of the chess game tree draw
+// in on the end of the roll; on the b5 downbeat it ignites and the tree blooms — about 30 moves per ply, rings
 // multiplying outward toward Shannon's estimate of ~10^120 games.
 
 import * as THREE from 'three';
@@ -21,12 +21,15 @@ export function shannon(ctx) {
   const disc = (r, th) => e1.clone().multiplyScalar(Math.cos(th) * r).addScaledVector(e2, Math.sin(th) * r);
 
   const RINGS = 12, R0 = 0.45, DR = 0.27;
+  // the rings draw in one per 32nd note, inside out, from the moment the head lands
+  const tG = ctx.B('b60.3'), d32 = ctx.beat.spb / 8;
   const rings = [];
   for (let k = 1; k <= RINGS; k++) {
     const r = R0 + DR * k;
     const pts = [];
     for (let i = 0; i < 160; i++) pts.push(disc(r, (i / 160) * TAU));
-    rings.push({ pts, closed: true, color: RED, gain: 2.4 - k * 0.1, width: 1.7 });
+    const t0 = tG + Math.round((k - 1) * 1.5) * d32;
+    rings.push({ pts, closed: true, color: RED, gain: 2.4 - k * 0.1, width: 1.7, t0, t1: t0 + 0.14 });
   }
   const ringLines = new FatLines(rings, { width: 1.6 });
 
@@ -81,12 +84,15 @@ export function shannon(ctx) {
   m.update = (t, st) => {
     const local = t - tIg;                 // ignition on the b5 downbeat
     const grow = ease.outExpo(clamp(local / 1.1));
-    spin.visible = local > 0 && local < 9;
-    spin.scale.setScalar(Math.max(0.001, 0.15 + 0.85 * grow));
-    spin.setRotationFromAxisAngle(n, local * 0.06);
-    const fadeAfter = 1 - 0.6 * clamp((local - 3) / 3);
+    spin.visible = t > tG - 0.05 && local < 9;
+    if (!spin.visible) return;
+    // compact while gathering, then the ignition flares the rings outward
+    spin.scale.setScalar(0.8 + 0.2 * grow);
+    spin.setRotationFromAxisAngle(n, Math.max(0, local) * 0.06);
+    const flare = local > 0 ? 1 + 0.9 * Math.exp(-local / 0.35) : 0.75;
+    const fadeAfter = 1 - 0.6 * clamp((local - 3.6) / 2.5);
+    ringLines.set(t, ctx, fadeAfter * flare);
     const a = (local > 0 ? 1 : 0) * fadeAfter * clamp(local / 0.18) * (0.35 + 0.65 * grow);
-    ringLines.set(local, ctx, a);
     tree.set(local, ctx, a);
     nodeDots.set(local, ctx, a);
   };

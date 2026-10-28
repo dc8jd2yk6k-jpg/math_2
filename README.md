@@ -6,7 +6,9 @@ onto the line, from Shannon's 1950 chess paper to the two refutations of the Exp
 Time Hypothesis in October 2026. The final pull-back reveals the path as the hockey stick
 it always was: linear time on the x-axis, an exponential on the y-axis, vertical by 2026.
 
-**The loop is a singularity.** The film ends by diving into the Navier–Stokes vortex
+**The line travels, then holds.** Between milestones the red head moves in one decisive
+stroke, drawing the line; it lands on a downbeat at each milestone and stays exactly still
+while the camera explores the object. **The loop is a singularity.** The film ends by diving into the Navier–Stokes vortex
 (2026.09.08) and opens inside it. Navier–Stokes is invariant under
 u(x, t) → λ·u(λx, λ²t): zooming in by λ is the same as running time λ² faster. So the
 vortex is built scale-free (log-uniform radii, logarithmic spiral arms, swirl ∝ 1/r²),
@@ -23,12 +25,12 @@ as a pure function of time. The same page plays live in a browser.
 | Time | Score | Milestone | What is on screen |
 |---|---|---|---|
 | 0:00 | final stab | **inside the vortex** | The dive continues into the eye of the Navier–Stokes vortex, the same picture at every scale; "2026.09.08" |
-| 0:02 | roll | **rewind** | The camera rises out; the head drops back through the vortex and races down the line, erasing it, as the date rolls back to 1950 and every milestone flashes past |
-| 0:05 | build | **1950 · Claude Shannon** | Ignition on the downbeat: the chess game tree as concentric rings, ≈10¹²⁰ games |
-| 0:06 | build | chess era | An avenue of giant Staunton pieces rises on eighth notes as the head flies to Deep Blue |
+| 0:02 | roll | **rewind** | The camera rises out; the head drops back through the vortex and races down the line in about 1.3 s, erasing it, as the date rolls back to 1950 and every milestone flashes past |
+| 0:04 | roll | **1950 · Claude Shannon** | The head rests at the origin while the rings of the chess game tree draw in on 32nd notes; ignition on the b5 downbeat, ≈10¹²⁰ games, and the camera swings round until the rings face it like a portal |
+| 0:08 | roll | 1950 → 1997 | The head shoots to Deep Blue's board in one move, drawing the line |
 | 0:09 | build | **1997 · Deep Blue** | Real Game 6 vs Kasparov (Caro-Kann, 8.Nxe6); 17.Bf5 exf5 18.Rxe7 Bxe7 19.c4 play on the beat; an α-β search tree bursts and prunes |
 | 0:16 | rolls | **2016 · AlphaGo** | Real Game 2 vs Lee Sedol: moves 1–36 on sixteenth notes, Move 37 (the 5th-line shoulder hit, ≈1 in 10,000) on a downbeat, then MCTS rollouts |
-| 0:24 | lull | 2017 → 2023 | One gate per year around the steepening line |
+| 0:24 | lull | 2016 → 2024 | The head climbs the steepening slope while the camera swings over the line |
 | 0:27 | **drop** | **2024 · IMO silver** | AlphaProof + AlphaGeometry 2: IMO 2024 Problem 4 constructed live (∠KIL + ∠YPX = 180°), score 28/42 |
 | 0:31 | drop | **2025 · IMO gold** | Gemini Deep Think: IMO 2025 Problem 1 "sunny lines" (k ∈ {0, 1, 3}), score 35/42 |
 | 0:35 | theme | **2026.05.20 · Erdős unit distance** | OpenAI: a √65-lattice unit-distance graph (16 lattice points on every unit circle); u(n) ≤ n^(1+o(1)) is struck out |
@@ -51,6 +53,7 @@ small status tags ("Lean-verified · not yet refereed", "under review", "mass ga
 **Picture: JavaScript (Three.js r186, WebGL2).**
 - `src/core/curve.js`: the curve. x = 2.5·(year − 1950); y is a monotone cubic tuned so the tangent is about 4° at Deep Blue, 37° at AlphaGo, 70–80° in the IMO years and vertical through 2026. A slow z-weave makes the early path read as 3D until it straightens. Arc-length tables and parallel-transport frames place objects and camera rigs.
 - `src/core/post.js`: half-float HDR. Each frame accumulates N sub-frames with centred Halton sub-pixel jitter (motion blur and supersampling in one pass), then applies a mip-chain bloom (13-tap down / tent up), a fixed chromatic aberration, ACES, a top scrim, the HUD and blue-noise dither.
+- `src/timeline/script.js` head schedule: travel and hold. Repeated values in a monotone cubic make each hold exactly flat; arrivals land on downbeat frames. Around the vortex the line and head fade out, so the eye of the loop is free of lines.
 - `src/core/camera.js`: shots are pure functions of time; consecutive shots blend along an arc around the aim point, and a steadicam filter (Gaussian over ±0.27 s, wrap-aware) removes any remaining corner. There is no shake, no FOV punch and no glitch: the beat lives in the objects (moves, stones, cards, rising pieces, shattering barriers) and the HUD. `tools/camcheck.mjs` checks every frame and the seam for angular speed, acceleration and direction reversals.
 - `src/world/*`: stars are quads stretched between the previous and current sub-frame camera, so whip-pans give continuous streaks. The trail is a near-plane-trimmed pixel-width ribbon.
 - `src/milestones/*`: one module per scene. Each is a pure function of time.
