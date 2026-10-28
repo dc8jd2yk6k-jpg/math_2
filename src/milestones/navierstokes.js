@@ -28,7 +28,7 @@ void main() {
   vec3 p = vec3(z, r * cos(th), r * sin(th)) * uScale;
   vec4 c = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
   float speed = (0.6 + swirl * 0.15) / (0.3 + r);
-  vB = clamp(0.45 + speed * 0.5, 0.25, 4.0) * (0.6 + 0.4 * sd);
+  vB = clamp(0.5 + speed * 0.55, 0.28, 4.0) * (0.6 + 0.4 * sd);
   gl_PointSize = clamp(uPx * 22.0 / c.w, 1.0, 5.0 * uPx);
   gl_Position = c;
 }`;
@@ -47,7 +47,7 @@ export function navierstokes(ctx) {
   const m = base(ctx, 'navierstokes');
   const B = ctx.B;
   const rng = mulberry32(908);
-  const N = 90000;
+  const N = 56000;
   const data = new Float32Array(N * 4);
   for (let i = 0; i < N; i++) {
     const r0 = 1.0 + Math.pow(rng(), 1.3) * 3.6;

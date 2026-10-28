@@ -23,7 +23,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
 }, []));
 const PRESETS = {
   preview: { w: 540, h: 960, sub: 1, msaa: 4, workers: 2, codec: 'x264', out: 'work/preview.mp4' },
-  final: { w: 1080, h: 1920, sub: 5, msaa: 4, workers: 2, codec: 'ffv1', out: 'dist/the-curve_1080x1920.mp4' },
+  final: { w: 1080, h: 1920, sub: 4, msaa: 0, workers: 2, codec: 'ffv1', out: 'dist/the-curve_1080x1920.mp4', vbitrate: '8600k' },
 };
 const cfg = { ...(PRESETS[args.preset] || PRESETS.preview), ...Object.fromEntries(Object.entries(args).filter(([k]) => k !== 'preset')) };
 const W = +cfg.w, H = +cfg.h, SUB = +cfg.sub, WORKERS = +cfg.workers;
@@ -61,7 +61,11 @@ function ffmpegSink(file, codec) {
   const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
     '-vf', vf, ...enc, file], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((r) => ff.on('close', r));
-  const write = (buf) => new Promise((resolve) => { if (ff.stdin.write(buf)) resolve(); else ff.stdin.once('drain', resolve); });
+  // hand the frame to the encoder and return at once; only block if ffmpeg falls >3 frames behind
+  const write = (buf) => new Promise((resolve) => {
+    ff.stdin.write(buf);
+    if (ff.stdin.writableLength < 3 * buf.length) resolve(); else ff.stdin.once('drain', resolve);
+  });
   return { write, close: async () => { ff.stdin.end(); await done; } };
 }
 
@@ -91,17 +95,20 @@ async function worker(id, frames, onFrame) {
   for (let k = 0; k < frames.length; k++) {
     const i = frames[k];
     sinks.set(String(id), onFrame(i));
-    const tm = await page.evaluate(([i, o]) => window.renderFrame(i, o), [i, { subframes: SUB, shutter: +(cfg.shutter ?? 0.5), upload: `/frame?w=${id}` }]);
+    const tm = await page.evaluate(([i, o]) => window.renderFrame(i, o), [i, { subframes: SUB, shutter: +(cfg.shutter ?? 0.5), adaptive: SUB > 1 && !cfg['no-adaptive'], upload: `/frame?w=${id}` }]);
     if (k % 25 === 0 || k === frames.length - 1) {
       const el = (Date.now() - t0) / 1000;
-      console.log(`[w${id}] ${k + 1}/${frames.length} frame ${i}  ${(el / (k + 1)).toFixed(2)} s/frame  eta ${((el / (k + 1)) * (frames.length - k - 1) / 60).toFixed(1)} min  [render ${tm[0].toFixed(0)} read ${tm[1].toFixed(0)} upload ${tm[2].toFixed(0)} ms]`);
+      console.log(`[w${id}] ${k + 1}/${frames.length} frame ${i}  ${(el / (k + 1)).toFixed(2)} s/frame  eta ${((el / (k + 1)) * (frames.length - k - 1) / 60).toFixed(1)} min  [render ${tm[0].toFixed(0)} read ${tm[1].toFixed(0)} upload ${tm[2].toFixed(0)} ms, sub ${tm[3]}]`);
     }
   }
   await browser.close();
 }
 
 const t0 = Date.now();
-if (cfg.stills) {
+if (cfg['encode-only']) {
+  encode(path.join(ROOT, 'work/parts/list.txt'));
+  console.log(`-> ${cfg.out}`);
+} else if (cfg.stills) {
   const list = String(cfg.stills).split(',').map(Number);
   const dir = path.join(ROOT, cfg.dir || 'work/stills');
   const mk = pngSink(dir);
@@ -125,17 +132,31 @@ if (cfg.stills) {
   }));
   const list = path.join(ROOT, 'work/parts/list.txt');
   fs.writeFileSync(list, parts.map((p) => `file '${p}'`).join('\n'));
+  encode(list, step);
+  console.log(`-> ${cfg.out}  (${all.length} frames, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
+}
+
+// Final encode from the lossless parts (re-runnable on its own with --encode-only).
+function encode(list, step = 1) {
   const out = path.join(ROOT, cfg.out);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const rate = step === 1 ? [] : ['-r', String(FPS / step)];
   const audio = step === 1 && !cfg.noaudio ? ['-i', path.join(ROOT, 'assets/audio/soundtrack.wav')] : [];
-  const vq = cfg.codec === 'ffv1'
-    ? ['-vf', 'scale=out_color_matrix=bt709:out_range=tv', '-c:v', 'libx264', '-preset', 'slow', '-crf', String(cfg.crf ?? 17), '-profile:v', 'high', '-tune', 'film']
-    : ['-c:v', 'libx264', '-preset', 'medium', '-crf', '18'];
-  const r = spawnSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', ...rate, '-i', list, ...audio,
-    ...vq, '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
-    ...(audio.length ? ['-c:a', 'aac', '-b:a', '320k', '-map', '0:v', '-map', '1:a', '-shortest'] : []), '-movflags', '+faststart', out], { stdio: 'inherit' });
-  if (r.status !== 0) throw new Error('final encode failed');
-  console.log(`-> ${cfg.out}  (${all.length} frames, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
+  const tags = ['-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
+  const lossless = cfg.codec === 'ffv1';
+  const vf = lossless ? ['-vf', 'scale=out_color_matrix=bt709:out_range=tv'] : [];
+  const x264 = ['-c:v', 'libx264', '-preset', lossless ? 'slow' : 'medium', '-profile:v', 'high', '-tune', 'film'];
+  const run = (a) => { const r = spawnSync('ffmpeg', ['-v', 'error', '-y', ...a], { stdio: 'inherit' }); if (r.status !== 0) throw new Error('encode failed'); };
+  const input = ['-f', 'concat', '-safe', '0', ...rate, '-i', list];
+  const aud = audio.length ? ['-c:a', 'aac', '-b:a', String(cfg.abitrate ?? '256k'), '-map', '0:v', '-map', '1:a', '-shortest'] : [];
+  if (cfg.vbitrate) {
+    // two-pass ABR: spends bits where the particles are, keeps the master under 100 MB
+    const rc = ['-b:v', String(cfg.vbitrate), '-maxrate', String(cfg.maxrate ?? '24M'), '-bufsize', String(cfg.bufsize ?? '48M')];
+    const log = path.join(ROOT, 'work/x264pass');
+    run([...input, ...vf, ...x264, ...rc, ...tags, '-pass', '1', '-passlogfile', log, '-an', '-f', 'null', '/dev/null']);
+    run([...input, ...audio, ...vf, ...x264, ...rc, ...tags, '-pass', '2', '-passlogfile', log, ...aud, '-movflags', '+faststart', out]);
+  } else {
+    run([...input, ...audio, ...vf, ...x264, '-crf', String(cfg.crf ?? (lossless ? 17 : 18)), ...tags, ...aud, '-movflags', '+faststart', out]);
+  }
 }
 server.close();

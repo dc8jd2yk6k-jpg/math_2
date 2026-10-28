@@ -202,13 +202,19 @@ export function buildScript(ctx) {
     let glitch = 0;
     for (const g of glitchAt) { const d = t - g; if (d >= -0.03 && d < 0.14) glitch = Math.max(glitch, 1 - d / 0.14); }
     const punch = beat.impulse(t, { from: 'beats', min: 0.55, decay: 0.18 });
+    // section downbeats: the drop, the second burst, the climax, the rewind
+    let hitFx = 0;
+    for (const g of [B('b15.1'), B('b35.1'), B('b49.1'), B('b57.1')]) {
+      const d = t - (Math.round(g * beat.fps) - 0.5) / beat.fps;
+      if (d >= 0 && d < 0.6) hitFx = Math.max(hitFx, Math.exp(-d / 0.12));
+    }
     return {
-      bloom: 0.16 + punch * 0.04 + ign * 0.25,
-      exposure: 1.0,
-      ca: 0.0016 + punch * 0.002,
+      bloom: 0.16 + punch * 0.04 + ign * 0.25 + hitFx * 0.35,
+      exposure: 1.0 + hitFx * 0.25,
+      ca: 0.0016 + punch * 0.002 + hitFx * 0.012,
       glitch,
-      flash: 0,
-      flashColor: new THREE.Color(1.0, 0.55, 0.45),
+      flash: hitFx * 0.06,
+      flashColor: new THREE.Color(1.0, 0.42, 0.36),
       vignette: 0.55,
       fade: 1,
       saturation: 1,
@@ -223,7 +229,7 @@ export function buildScript(ctx) {
     const flare = tau >= 0 ? Math.exp(-tau / 0.35) : Math.exp(tau / 0.07); // peaks on the stab at frame 0
     return {
       t, s,
-      head: { size: 0.55 + flare * 0.9, glow: 2.2 + flare * 1.2, core: 7, minPx: 20, alpha: 1 - escape, light: 5 },
+      head: { size: 0.55 + flare * 0.9, glow: 2.2 + flare * 1.2 + 0.45 * beat.pulse(t, 7), core: 7, minPx: 20, alpha: 1 - escape, light: 5 },
       trailWidth: 2.4,
       trailFade: 1,
       trailDissolve: 0,

@@ -54,8 +54,10 @@ export class Beat {
     for (const h of ev) {
       if (h.strength < min) continue;
       if (window && (h.t < window[0] || h.t > window[1])) continue;
+      // fire on the frame that contains the event (half a frame early), not the next one
+      const te = (Math.round(h.t * this.fps) - 0.5) / this.fps;
       for (const off of [0, -T, T]) {
-        const dt = t - (h.t + off);
+        const dt = t - (te + off);
         if (dt < 0 || dt > decay * 8) continue;
         const a = attack > 0 ? 1 - Math.exp(-dt / attack) : 1;
         s += ((h.strength - min) / (1 - min + 1e-6)) * a * Math.exp(-dt / decay);

@@ -127,9 +127,9 @@ export function jacobian(ctx) {
     const a = clamp((t - m.tIn) / 0.4) * fade;
     if (lp.visible) hud.text('p', lp.x - 26, lp.y - 18, { family: 'Crimson', style: 'italic', size: 40, alpha: a });
     if (lq.visible) hud.text('q', lq.x + 24, lq.y - 18, { family: 'Crimson', style: 'italic', size: 40, alpha: a, color: '#ff8a7a' });
-    hud.tex(ctx.assets.tex.jac_F, 540, 1380, 112, { alpha: clamp((t - m.tIn - 0.2) / 0.4) * fade * (1 - 0.6 * clamp((t - tM1) / 0.5)) });
+    hud.tex(ctx.assets.tex.jac_F, 540, 1470, 104, { alpha: clamp((t - m.tIn - 0.2) / 0.4) * fade * (1 - 0.6 * clamp((t - tM1) / 0.5)) });
     hud.tex(ctx.assets.tex.jac_det, 540, 590, 44, { alpha: clamp((t - B('b21.3')) / 0.3) * fade });
-    hud.tex(ctx.assets.tex.jac_eq, 540, 1500, 44, { alpha: clamp((t - tM1) / 0.3) * fade, reveal: clamp((t - tM1) / 0.45) });
+    hud.tex(ctx.assets.tex.jac_eq, 540, 1572, 42, { alpha: clamp((t - tM1) / 0.3) * fade, reveal: clamp((t - tM1) / 0.45) });
   };
   return m;
 }

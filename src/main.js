@@ -44,7 +44,7 @@ if (RENDER) {
       const r = await fetch(opts.upload, { method: 'POST', body: px });
       if (!r.ok) throw new Error(`upload failed ${r.status}`);
     }
-    return [t1 - t0, t2 - t1, performance.now() - t2];
+    return [t1 - t0, t2 - t1, performance.now() - t2, film.lastSubframes];
   };
   window.__ready = true;
 } else {

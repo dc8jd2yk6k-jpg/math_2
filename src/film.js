@@ -69,10 +69,28 @@ export class Film {
     for (const m of this.milestones) m.update(t, st);
   }
 
-  renderFrame(i, { subframes = 1, shutter = 0.5 } = {}) {
+  // On-screen motion across the shutter, in pixels: how far a point on the line at the
+  // head and a point far down the view axis travel between shutter open and close.
+  motionPx(t, span) {
+    const cam = this.hudCamera;
+    const p0 = this.cameraAt(t - span / 2, cam);
+    const far = p0.pos.clone().add(p0.look.clone().sub(p0.pos).normalize().multiplyScalar(40));
+    const near = this.curve.at(this.script.headS(this.wrap(t))).p.clone();
+    const a = [near.clone().project(cam), far.clone().project(cam)];
+    this.cameraAt(t + span / 2, cam);
+    const b = [near.project(cam), far.project(cam)];
+    let m = 0;
+    for (let k = 0; k < 2; k++) m = Math.max(m, Math.hypot((b[k].x - a[k].x) * this.W / 2, (b[k].y - a[k].y) * this.H / 2));
+    return m;
+  }
+
+  renderFrame(i, { subframes = 1, shutter = 0.5, adaptive = false } = {}) {
     const t = i / this.fps;
-    const N = Math.max(1, subframes | 0);
     const span = shutter / this.fps;
+    let N = Math.max(1, subframes | 0);
+    // thin lines strobe when copies are far apart: add sub-frames for fast moves
+    if (adaptive && N > 1) N = Math.min(16, Math.max(N, Math.ceil(this.motionPx(t, span) / (5 * (this.H / 1920)))));
+    this.lastSubframes = N;
     const cam = this.hudCamera;
     this.post.beginFrame();
     for (let k = 0; k < N; k++) {
