@@ -4,7 +4,9 @@
 //                2x - 3x^2 y - x^3 z ),      det J_F = -2 everywhere,
 // yet F(0,0,-1/4) = F(1,-3/2,13/2) = (-1/4,0,0): locally invertible everywhere,
 // not invertible globally. On screen the straight tube from p to q morphs into its
-// image, which closes into a loop: both ends land on the same point.
+// image, which closes into a loop: both ends land on the same point. Small cubes
+// ride along the tube and map through the Jacobian J(v): each is sheared into a
+// different parallelepiped, but every one has exactly twice the volume, flipped.
 
 import * as THREE from 'three';
 import { base } from './common.js';
@@ -47,12 +49,34 @@ export function jacobian(ctx) {
   };
   cube(p).forEach((pts) => domainLines.push({ kind: 'cubeP', pts }));
   cube(q).forEach((pts) => domainLines.push({ kind: 'cubeQ', pts }));
+  // volume cells along the tube; their images use the exact Jacobian at the centre
+  const jac = (v) => {
+    const h = 1e-5;
+    return [0, 1, 2].map((j) => {
+      const d = [0, 0, 0]; d[j] = h;
+      const a = F(v.x + d[0], v.y + d[1], v.z + d[2]), b = F(v.x - d[0], v.y - d[1], v.z - d[2]);
+      return a.map((x, i) => (x - b[i]) / (2 * h)); // column j
+    });
+  };
+  const CELLS = 22, CH = 0.085;
+  for (let k = 1; k < CELLS; k++) {
+    const c = along(k / CELLS, 0, 0);
+    const J = jac(c);
+    const Fc = F(c.x, c.y, c.z);
+    cube(c).forEach((pts) => {
+      const img = pts.map((v) => {
+        const d = v.clone().sub(c).multiplyScalar(CH / 0.12);
+        return new THREE.Vector3(Fc[0] + J[0][0] * d.x + J[1][0] * d.y + J[2][0] * d.z, Fc[1] + J[0][1] * d.x + J[1][1] * d.y + J[2][1] * d.z, Fc[2] + J[0][2] * d.x + J[1][2] * d.y + J[2][2] * d.z);
+      });
+      domainLines.push({ kind: 'cell', pts: pts.map((v) => c.clone().add(v.clone().sub(c).multiplyScalar(CH / 0.12))), imgRaw: img });
+    });
+  }
 
   // display transforms: domain centred & aligned with the line; image centred
   const mid = p.clone().add(q).multiplyScalar(0.5);
   const toLocal = new THREE.Matrix4().makeBasis(u1, axis, u2).invert(); // axis -> local +y (the curve's N?) handled below
   const domainXf = (v) => v.clone().sub(mid).applyMatrix4(toLocal);
-  const imgAll = domainLines.flatMap((l) => l.pts.map((v) => new THREE.Vector3(...F(v.x, v.y, v.z))));
+  const imgAll = domainLines.filter((l) => !l.imgRaw).flatMap((l) => l.pts.map((v) => new THREE.Vector3(...F(v.x, v.y, v.z))));
   const bb = new THREE.Box3().setFromPoints(imgAll);
   const imgC = bb.getCenter(new THREE.Vector3());
   const imgScale = 6.2 / Math.max(...bb.getSize(new THREE.Vector3()).toArray());
@@ -70,7 +94,7 @@ export function jacobian(ctx) {
     const imgA = new Float32Array(aA.array.length), imgB = new Float32Array(aB.array.length);
     let v = 0;
     for (const l of ls) {
-      const img = l.pts.map((x) => reorder(imageXf(x)));
+      const img = l.imgRaw ? l.imgRaw.map((v) => reorder(v.clone().sub(imgC).multiplyScalar(imgScale))) : l.pts.map((x) => reorder(imageXf(x)));
       for (let k = 0; k < img.length - 1; k++) for (let c = 0; c < 4; c++, v++) {
         imgA.set([img[k].x, img[k].y, img[k].z], v * 3);
         imgB.set([img[k + 1].x, img[k + 1].y, img[k + 1].z], v * 3);
@@ -80,8 +104,9 @@ export function jacobian(ctx) {
     return fl;
   };
   const parts = [
-    build('core', new THREE.Color(1, 0.96, 0.95), 2.6, 2.0), build('tube', new THREE.Color(1, 1, 1), 0.9, 1.1),
-    build('rib', new THREE.Color(1, 1, 1), 0.6, 1.0), build('cubeP', new THREE.Color(1, 1, 1), 2.4, 1.6), build('cubeQ', RED, 3.0, 1.8),
+    build('core', new THREE.Color(1, 0.96, 0.95), 2.8, 2.6), build('tube', new THREE.Color(1, 1, 1), 1.0, 1.4),
+    build('rib', new THREE.Color(1, 1, 1), 0.6, 1.1), build('cell', new THREE.Color(1, 0.55, 0.48), 1.5, 1.4),
+    build('cubeP', new THREE.Color(1, 1, 1), 2.6, 2.0), build('cubeQ', RED, 3.2, 2.2),
   ];
   const holder = new THREE.Group();
   parts.forEach((fl) => holder.add(fl.mesh));

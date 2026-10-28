@@ -39,6 +39,7 @@ const res = await page.evaluate(async (F) => {
   toggle(film.head.mesh, false); out.scene_no_head = time(sceneOnly); toggle(film.head.mesh, true);
   const ms = film.milestones.map((m) => m.group);
   ms.forEach((g) => (g.visible = false)); out.scene_no_milestones = time(sceneOnly); ms.forEach((g) => (g.visible = true));
+  for (const m of film.milestones) { if (!m.group || !m.group.visible) continue; m.group.visible = false; out['without_' + m.id] = time(sceneOnly); m.group.visible = true; }
   sc.children.forEach((c) => (c._v = c.visible, c.visible = false)); out.scene_empty = time(sceneOnly); sc.children.forEach((c) => (c.visible = c._v));
   const g = film.stars.mesh.geometry, all = g.instanceCount;
 

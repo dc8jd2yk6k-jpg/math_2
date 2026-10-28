@@ -126,7 +126,7 @@ export function imo2024(ctx) {
   const dots = new Dots(Object.entries(pts).map(([k, v]) => ({ p: P3(v), size: 7, t0: bt(when[k], 0.4) })), { gain: 4 });
   m.group.add(art.mesh, dots.mesh);
   const md = medal(ctx, 0xd9dde3, 'silver');
-  md.position.copy(P3(V2(8.6, 3.6)));
+  md.position.copy(P3(V2(5.6, 7.4)));
   m.group.add(md);
 
   m.update = (t, st) => {
@@ -137,7 +137,7 @@ export function imo2024(ctx) {
     const k = clamp((t - bt('b16.4')) / 0.4);
     md.visible = k > 0 && life > 0.001;
     md.userData.light.visible = md.visible && t < m.tOut + 3;
-    md.scale.setScalar(Math.max(0.001, ease.outBack(k) * life));
+    md.scale.setScalar(Math.max(0.001, 1.7 * ease.outBack(k) * life));
     md.rotation.set(0, Math.sin(t * 0.9) * 0.5 + (1 - k) * 3, 0);
   };
   m.labels = (t, hud, project) => {
@@ -184,7 +184,7 @@ export function imo2025(ctx) {
   const art = new FatLines(lines, { width: 1.8 });
   m.group.add(dots.mesh, art.mesh);
   const md = medal(ctx, 0xf0c35a, 'gold');
-  md.position.copy(P3(V2(6.8, 5.6)));
+  md.position.copy(P3(V2(5.4, 7.0)));
   m.group.add(md);
 
   m.update = (t, st) => {
@@ -195,7 +195,7 @@ export function imo2025(ctx) {
     const k = clamp((t - B('b18.4')) / 0.4);
     md.visible = k > 0 && life > 0.001;
     md.userData.light.visible = md.visible && t < m.tOut + 3;
-    md.scale.setScalar(Math.max(0.001, ease.outBack(k) * life));
+    md.scale.setScalar(Math.max(0.001, 1.7 * ease.outBack(k) * life));
     md.rotation.set(0, Math.sin(t * 0.9) * 0.5 + (1 - k) * 3, 0);
   };
   m.labels = (t, hud, project) => {

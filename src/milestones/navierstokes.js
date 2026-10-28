@@ -47,7 +47,7 @@ void main() {
   vec4 c = projectionMatrix * mv;
   float dist = max(1e-4, -mv.z);
   float rad = 0.014 * r * uFocal / dist;     // world size proportional to radius: scale-free
-  float b = 0.55 + 0.9 * sd;
+  float b = 0.7 + 1.1 * sd;
   if (rad < 0.7) { b *= (rad / 0.7) * (rad / 0.7); rad = 0.7; }
   rad = min(rad, 5.0 * uPx);
   // colour by scale relative to the viewer: eye white-hot, near shells cyan, far shells deep blue
@@ -85,7 +85,7 @@ void main() {
 export function navierstokes(ctx) {
   const m = base(ctx, 'navierstokes');
   const rng = mulberry32(908);
-  const N = 160000;
+  const N = 90000;
   const data = new Float32Array(N * 4);
   const ARMS = 5, TWIST = 1.15; // logarithmic spiral arms: theta = arm + TWIST * ln r
   for (let i = 0; i < N; i++) {

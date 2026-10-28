@@ -38,7 +38,7 @@ void main() {
 
 function barrier(seed, color) {
   const rng = mulberry32(seed);
-  const n = 9, size = 1.25, half = (n * size) / 2;
+  const n = 12, size = 1.7, half = (n * size) / 2;
   const pos = [], uv = [], cen = [], rnd = [], idx = [];
   let v = 0;
   for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
@@ -88,7 +88,7 @@ export function ethOpenAI(ctx) {
     const fade = 1 - clamp((t - m.tOut) / 0.3);
     hud.tex(ctx.assets.tex.eth, 540, 1480, 64, { alpha: fade * clamp((t - hit - 0.2) / 0.3), reveal: clamp((t - hit - 0.2) / 0.4) });
     const ph = project(ctx.film.curve.at(ctx.headS(t)).p);
-    if (ph.visible) hud.label('OpenAI', ph.x, ph.y, { size: 28, alpha: fade * clamp((t - m.tIn + 0.5) / 0.3), dot: false, dx: 34 });
+    if (ph.visible) hud.label('OpenAI', ph.x, ph.y, { size: 28, alpha: fade * clamp((t - m.tIn + 0.5) / 0.3), dot: false, dx: -34, align: 'right' });
   };
   return m;
 }

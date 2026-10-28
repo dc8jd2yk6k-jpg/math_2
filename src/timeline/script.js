@@ -251,7 +251,7 @@ export function buildScript(ctx) {
     // IMO 2025
     .add(B('b17.1', -0.4), orb(() => P('imo2025').add(W(2.2, 1.0, 0)), { d0: 13.5, d1: 12.8, az0: -0.06, az1: 0.06, el0: -0.03, el1: 0.03, fov: 46, k: (t) => S('b17.1', 'b19.1', t) }), { blend: 0.8 })
     .add(B('b19.1', -0.25), orb(P('erdos'), { d0: 9.2, d1: 8.2, az0: 0.5, az1: 1.2, el0: 0.66, el1: 0.5, fov: 46, k: (t) => S('b19.1', 'b21.1', t), look: P('erdos').add(W(0, 0.4, 0)) }), { blend: 0.9 })
-    .add(B('b21.1', -0.4), orb(P('jacobian'), { d0: 12, d1: 10.5, az0: 1.7, az1: 2.4, el0: 0.14, el1: 0.06, fov: 46, k: (t) => S('b21.1', 'b23.1', t), look: P('jacobian').add(W(0, 1.6, 0)) }), { blend: 0.9 })
+    .add(B('b21.1', -0.4), orb(P('jacobian'), { d0: 9.5, d1: 8.2, az0: 1.7, az1: 2.4, el0: 0.14, el1: 0.06, fov: 46, k: (t) => S('b21.1', 'b23.1', t), look: P('jacobian').add(W(0, 1.6, 0)) }), { blend: 0.9 })
     .add(B('b23.1', -0.4), orb(P('percolation'), { d0: 18, d1: 9, az0: 2.8, az1: 3.6, el0: 0.42, el1: 0.2, fov: 48, look: P('percolation').add(W(0, 0.8, 0)), k: (t) => ease.inOutQuad(S('b23.1', 'b24.4', t)) }), { blend: 0.9 })
     // Navier–Stokes: outside, then inside the eye as it collapses to T*, then the burst
     .add(B('b24.4', 0.2), nsEvent, { blend: 1.0 })
@@ -283,7 +283,7 @@ export function buildScript(ctx) {
     wrap: (t) => beat.wrap(t),
   });
   // extra sub-frames whenever the camera is in or near the vortex (fast swirl)
-  const minSub = (t) => (camera(t).pos.distanceTo(PS) < 12 ? 10 : 0);
+  const minSub = (t) => (camera(t).pos.distanceTo(PS) < 12 ? 6 : 0);
 
   // ---------------------------------------------------------------- HUD: date
   const yearOfHead = (t) => curve.yearAt(headS(t));
@@ -386,10 +386,10 @@ export function buildScript(ctx) {
     }
     // the dive: the scaling law, then t -> T* as the eye closes in
     const x = tau(t);
-    const da = envelope(x, B('b57.3') - T, 0.35, 0.4, 0.3);
+    const da = envelope(x, -3.1, 0.35, 0.4, 0.3);
     if (da > 0) {
-      hud.tex(ctx.assets.tex.ns_scale, 540, 1440, 50, { alpha: da * (1 - smoothstep(-2.2, -1.7, x)) });
-      hud.tex(ctx.assets.tex.ns_tstar, 540, 1440, 54, { alpha: da * smoothstep(-1.8, -1.3, x) });
+      hud.tex(ctx.assets.tex.ns_scale, 540, 1440, 50, { alpha: da * (1 - smoothstep(-1.6, -1.3, x)) });
+      hud.tex(ctx.assets.tex.ns_tstar, 540, 1440, 54, { alpha: da * smoothstep(-1.4, -1.1, x) });
     }
   };
 

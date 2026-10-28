@@ -82,5 +82,38 @@ def seam(video):
           f"max {d.max():.2f}  wrap diff {wrap:.2f}  -> wrap is at the {100 * (d < wrap).mean():.0f}th percentile")
 
 
-if __name__ == "__main__" and sys.argv[1] in ("sync", "seam"):
-    {"sync": sync, "seam": seam}[sys.argv[1]](*sys.argv[2:])
+def jitter(video, w=180, h=320):
+    """Image-based shake detector: estimate the global frame-to-frame translation by
+    phase correlation, then look at what is left after a 7-frame moving average.
+    Smooth camera moves leave ~0; shake leaves an oscillating residual."""
+    import numpy as np
+    F = frames_gray(video, w, h)
+    win = np.outer(np.hanning(h), np.hanning(w))
+    shifts = []
+    for a, b in zip(F[:-1], F[1:]):
+        A, Bf = np.fft.fft2(a * win), np.fft.fft2(b * win)
+        R = A * np.conj(Bf)
+        r = np.fft.ifft2(R / (np.abs(R) + 1e-6)).real
+        y, x = np.unravel_index(np.argmax(r), r.shape)
+        y = y - h if y > h // 2 else y
+        x = x - w if x > w // 2 else x
+        shifts.append((x, y))
+    s = np.array(shifts, dtype=float)
+    k = np.ones(7) / 7
+    smooth = np.stack([np.convolve(np.pad(s[:, i], 3, mode="wrap"), k, mode="valid") for i in range(2)], axis=1)
+    res = np.linalg.norm(s - smooth, axis=1)
+    # oscillation: residual sign flips on consecutive frames along the dominant axis
+    flips = 0
+    for i in range(1, len(s) - 1):
+        d0, d1 = s[i] - smooth[i], s[i + 1] - smooth[i + 1]
+        if np.linalg.norm(d0) > 1.5 and np.linalg.norm(d1) > 1.5 and np.dot(d0, d1) < 0:
+            flips += 1
+    bad = np.where(res > 2.0)[0]
+    print(f"frames {len(F)}  residual median {np.median(res):.2f}px  p99 {np.percentile(res, 99):.2f}px  max {res.max():.2f}px  "
+          f"(at {w}x{h})  oscillation flips: {flips}")
+    if len(bad):
+        print("frames with residual > 2px:", ", ".join(f"{i}({i / 30:.2f}s)" for i in bad[:30]))
+
+
+if __name__ == "__main__" and sys.argv[1] in ("sync", "seam", "jitter"):
+    {"sync": sync, "seam": seam, "jitter": jitter}[sys.argv[1]](*sys.argv[2:])
