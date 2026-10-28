@@ -64,6 +64,13 @@ small status tags ("Lean-verified · not yet refereed", "under review", "mass ga
 
 **Render:** `tools/render.mjs` drives headless Chromium (SwiftShader) with parallel workers. Raw RGBA frames go over HTTP into ffmpeg (FFV1 intermediates), then into x264 with BT.709 tags and AAC.
 
+## Master
+
+`dist/the-curve_1080x1920.mp4`: H.264 High, 1080×1920, 30 fps, 2488 frames, two-pass 8.6 Mbps,
+BT.709, AAC 256 kbps; video and audio are both 82.933 s. Rendered in 120 min on 4 CPU cores
+(SwiftShader). Loop wrap difference sits at the 82nd percentile of ordinary frame changes;
+`node tools/camcheck.mjs` reports no direction reversals over all frames and the seam.
+
 ## Reproduce
 
 ```bash
