@@ -70,6 +70,7 @@ export class Film {
     this.trail.set(s, this.W, this.H, this.camera.near, st.trailWidth * (this.H / 1920));
     const tu = this.trail.material.uniforms;
     tu.uFade.value = st.trailFade; tu.uDissolve.value = st.trailDissolve; tu.uGain.value = st.trailGain;
+    this.trail.mesh.visible = st.trailFade > 0.002;
     this.stars.material.uniforms.uGain.value = st.starGain;
     // during the opening rewind the objects show their end-of-loop state (time t + T),
     // so everything threaded on the line continues across the seam

@@ -87,6 +87,10 @@ export class Trail {
         uHot: { value: new THREE.Color(1.0, 0.07, 0.04) }, uWarm: { value: new THREE.Color(1.0, 0.72, 0.62) },
         uCool: { value: new THREE.Color(0.78, 0.8, 0.86) },
       },
+      // additive like the rest of the line art: a faded trail only dims, it never
+      // turns into a dark line occluding whatever glows behind it
+      transparent: true, depthWrite: false,
+      blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendEquation: THREE.AddEquation,
     });
     this.mesh = new THREE.Mesh(g, this.material);
     this.mesh.frustumCulled = false;

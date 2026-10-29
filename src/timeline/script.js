@@ -398,7 +398,9 @@ export function buildScript(ctx) {
     const da = envelope(x, -3.1, 0.35, 0.4, 0.3);
     if (da > 0) {
       hud.tex(ctx.assets.tex.ns_scale, 540, 1440, 50, { alpha: da * (1 - smoothstep(-1.6, -1.3, x)) });
-      hud.tex(ctx.assets.tex.ns_tstar, 540, 1440, 54, { alpha: da * smoothstep(-1.4, -1.1, x) });
+      // t -> T* leads up to the loop point but is gone for its last frames and never
+      // shows after it, so the seam itself is clean
+      hud.tex(ctx.assets.tex.ns_tstar, 540, 1440, 54, { alpha: da * smoothstep(-1.4, -1.1, x) * (1 - smoothstep(-0.65, -0.35, x)) });
     }
   };
 
