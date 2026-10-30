@@ -70,7 +70,7 @@ small status tags ("Lean-verified · not yet refereed", "under review", "mass ga
 ## Master
 
 `dist/the-curve_1080x1920.mp4`: H.264 High, 1080×1920, 30 fps, 2488 frames, two-pass 8.6 Mbps,
-BT.709, AAC 256 kbps; video and audio are both 82.933 s. Rendered in 90 min on 4 CPU cores
+BT.709, AAC 256 kbps; video and audio are both 82.933 s. Rendered in 76 min on 4 CPU cores
 (SwiftShader). Loop wrap difference sits at the 83rd percentile of ordinary frame changes;
 `node tools/camcheck.mjs` reports no direction reversals over all frames and the seam.
 
