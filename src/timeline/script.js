@@ -247,16 +247,16 @@ export function buildScript(ctx) {
     // 1997 -> 2016
     .add(B('b9.4', -0.2), travel({ back: 7, side: 9, up: 2.5, ahead: 6, phi: () => Math.PI }), { blend: 1.0 })
     // AlphaGo: high over the board
-    .add(B('b10.2', -0.3), frameOrb('alphago', agBoard, { radius: 8.2, az0: Math.PI + 0.35, az1: Math.PI + 0.85, el0: 1.0, el1: 0.8, fov: 46, k: (t) => ease.inOutSine(S('b10.2', 'b13.4', t)) }), { blend: 1.0 })
+    .add(B('b10.2', -0.3), frameOrb('alphago', agBoard, { radius: 13, az0: Math.PI + 0.35, az1: Math.PI + 0.85, el0: 1.0, el1: 0.8, fov: 46, k: (t) => ease.inOutSine(S('b10.2', 'b13.4', t)) }), { blend: 1.0 })
     // 2016 -> 2024: follow the head up the steepening slope through the lull
     // (the camera swings over the line from the -z side to the +z side the IMO faces)
     .add(B('b13.4', -0.3), travel({ back: 9, side: 7, up: 1, ahead: 2, fov: 50, phi: (t) => Math.PI * (1 - ease.inOutSine(S('b13.4', 'b15.1', t))) }), { blend: 1.2 })
     // IMO 2024: square-on to the construction, close
-    .add(B('b15.1', -0.2), orb(() => P('imo2024').add(W(2.1, -1.64, 0)), { d0: 13.5, d1: 12.6, az0: 0.06, az1: -0.05, el0: 0.03, el1: -0.02, fov: 46, k: (t) => S('b15.1', 'b17.1', t) }), { blend: 0.6, e: ease.inOutSine })
+    .add(B('b15.1', -0.2), orb(() => P('imo2024').add(W(2.1, -1.64, 0)), { d0: 17.5, d1: 16.4, az0: 0.06, az1: -0.05, el0: 0.03, el1: -0.02, fov: 46, k: (t) => S('b15.1', 'b17.1', t) }), { blend: 0.6, e: ease.inOutSine })
     // IMO 2025
-    .add(B('b17.1', -0.4), orb(() => P('imo2025').add(W(2.2, 1.0, 0)), { d0: 13.5, d1: 12.8, az0: -0.06, az1: 0.06, el0: -0.03, el1: 0.03, fov: 46, k: (t) => S('b17.1', 'b19.1', t) }), { blend: 0.8 })
+    .add(B('b17.1', -0.4), orb(() => P('imo2025').add(W(2.2, 1.0, 0)), { d0: 17.5, d1: 16.6, az0: -0.06, az1: 0.06, el0: -0.03, el1: 0.03, fov: 46, k: (t) => S('b17.1', 'b19.1', t) }), { blend: 0.8 })
     .add(B('b19.1', -0.25), orb(P('erdos'), { d0: 9.2, d1: 8.2, az0: 0.5, az1: 1.2, el0: 0.66, el1: 0.5, fov: 46, k: (t) => S('b19.1', 'b21.1', t), look: P('erdos').add(W(0, 0.4, 0)) }), { blend: 0.9 })
-    .add(B('b21.1', -0.4), orb(P('jacobian'), { d0: 9.5, d1: 8.2, az0: 1.7, az1: 2.4, el0: 0.14, el1: 0.06, fov: 46, k: (t) => S('b21.1', 'b23.1', t), look: P('jacobian').add(W(0, 1.6, 0)) }), { blend: 0.9 })
+    .add(B('b21.1', -0.4), orb(P('jacobian'), { d0: 14.2, d1: 12.6, az0: 1.7, az1: 2.4, el0: 0.14, el1: 0.06, fov: 46, k: (t) => S('b21.1', 'b23.1', t), look: P('jacobian').add(W(0, 1.6, 0)) }), { blend: 0.9 })
     .add(B('b23.1', -0.4), orb(P('percolation'), { d0: 18, d1: 9, az0: 2.8, az1: 3.6, el0: 0.42, el1: 0.2, fov: 48, look: P('percolation').add(W(0, 0.8, 0)), k: (t) => ease.inOutQuad(S('b23.1', 'b24.4', t)) }), { blend: 0.9 })
     // Navier–Stokes: outside, then inside the eye as it collapses to T*, then the burst
     .add(B('b24.4', 0.2), nsEvent, { blend: 1.0 })
