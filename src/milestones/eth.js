@@ -64,6 +64,18 @@ function barrier(seed, color) {
   return mesh;
 }
 
+// The two labs' names beside their barriers: OpenAI on the left, Claude (Anthropic) on
+// the right, both held through the second hit. Positions follow the barrier on screen
+// but are kept inside the frame, clear of the titles and the equation.
+function labLabel(hud, project, m, name, side, alpha) {
+  if (alpha <= 0.002) return;
+  const p = project(m.local(new THREE.Vector3(0, 0, 0)));
+  const px = p.visible ? p.x : 540, py = p.visible ? p.y : 900;
+  const x = side < 0 ? clamp(px - 230, 170, 480) : clamp(px + 230, 600, 910);
+  const y = clamp(py, 660, 1300);
+  hud.label(name, x, y, { size: 30, weight: 600, alpha, dot: false, dx: 0, align: side < 0 ? 'right' : 'left' });
+}
+
 export function ethOpenAI(ctx) {
   const m = base(ctx, 'eth_openai');
   const B = ctx.B;
@@ -77,15 +89,15 @@ export function ethOpenAI(ctx) {
     u.uT.value = t; u.uHit.value = hit;
     u.uAlpha.value = life * clamp((t - (m.tIn - 2.5)) / 1.0);
   };
+  const until = B('b54.4', 1); // the label stays until the second result's block ends
   m.labels = (t, hud, project) => {
+    labLabel(hud, project, m, 'OpenAI', -1, clamp((t - m.tIn + 0.5) / 0.3) * (1 - clamp((t - until) / 0.3)));
     if (t < m.tIn - 1.5 || t > m.tOut + 0.4) return;
     const p = project(m.local(new THREE.Vector3(0, 0, 5.2)));
     const a = clamp((t - (m.tIn - 1.5)) / 0.4) * (1 - clamp((t - hit) / 0.5));
     if (p.visible) hud.tex(ctx.assets.tex.eth_wall, p.x, p.y - 40, 56, { alpha: a });
     const fade = 1 - clamp((t - m.tOut) / 0.3);
     hud.tex(ctx.assets.tex.eth, 540, 1480, 64, { alpha: fade * clamp((t - hit - 0.2) / 0.3), reveal: clamp((t - hit - 0.2) / 0.4) });
-    const pl = project(m.local(new THREE.Vector3(0, 0, -9.5)));
-    if (pl.visible) hud.label('OpenAI', pl.x, pl.y, { size: 28, alpha: fade * clamp((t - m.tIn + 0.5) / 0.3), dot: false, dx: 0, align: 'center' });
   };
   return m;
 }
@@ -106,8 +118,7 @@ export function ethClaude(ctx) {
   m.labels = (t, hud, project) => {
     if (t < m.tIn - 1.2 || t > m.tOut + 0.4) return;
     const fade = 1 - clamp((t - m.tOut) / 0.3);
-    const pp = project(m.local(new THREE.Vector3(0, 0, -9.5)));
-    if (pp.visible) hud.label('Claude (Anthropic)', pp.x, pp.y, { size: 28, alpha: fade * clamp((t - (m.tIn - 1)) / 0.3), dot: false, dx: 0, align: 'center' });
+    labLabel(hud, project, m, 'Claude (Anthropic)', 1, fade * clamp((t - (m.tIn - 1)) / 0.3));
     hud.tex(ctx.assets.tex.eth, 540, 1480, 64, { alpha: fade * clamp((t - hit) / 0.2) });
   };
   return m;

@@ -25,7 +25,8 @@ export const COPY = {
   navierstokes: { title: 'Navier–Stokes', sub: 'OpenAI · finite-time singularity for 3D incompressible flow', chip: 'LEAN-FORMALIZED · UNDER REVIEW' },
   manuscripts: { title: '722 manuscripts', sub: 'OpenAI · released in a single day · 162 with Lean-checked main results', chip: 'UNDER REVIEW' },
   yangmills: { title: 'Yang–Mills existence', sub: 'OpenAI · 4D quantum gauge theory exists (mass gap still open) · plus Kakeya, all dimensions', chip: 'ARTIFACTS NOT YET PUBLIC' },
-  eth: { title: 'ETH refuted ×2', sub: 'Exponential Time Hypothesis · OpenAI, then Claude (Anthropic) hours later: 3-SAT in 2^o(n) time', chip: 'OPENAI · CLAUDE (ANTHROPIC) · UNDER REVIEW' },
+  eth_openai: { title: 'Exponential Time Hypothesis', sub: 'OpenAI · refuted: satisfiability in subexponential time', chip: 'LEAN-CHECKED · UNDER REVIEW' },
+  eth_claude: { title: '…refuted again, hours later', sub: 'Claude (Anthropic) · “A 2^o(n) Time Algorithm for 3-SAT”', chip: 'INDEPENDENT RESULT' },
 };
 
 const Y = new THREE.Vector3(0, 1, 0);
@@ -317,7 +318,8 @@ export function buildScript(ctx) {
     ['shannon', B('b5.1'), B('b6.1')], ['deepblue', B('b7.1'), B('b9.4')], ['alphago', B('b10.2'), B('b13.4')],
     ['imo2024', B('b15.1'), B('b16.4')], ['imo2025', B('b17.1'), B('b18.4')], ['erdos', B('b19.1'), B('b20.4')],
     ['jacobian', B('b21.1'), B('b22.4')], ['percolation', B('b23.1'), B('b24.4')], ['navierstokes', B('b33.1'), B('b38.4')],
-    ['manuscripts', B('b49.1'), B('b50.4')], ['yangmills', B('b51.1'), B('b52.4')], ['eth', B('b53.1'), B('b54.4', 0.6)],
+    ['manuscripts', B('b49.1'), B('b50.4')], ['yangmills', B('b51.1'), B('b52.4')], ['eth_openai', B('b53.1'), B('b53.4', 0.6)],
+    ['eth_claude', B('b54.1'), B('b54.4', 0.6)],
   ].map(([id, t0, t1]) => ({ id, t0, t1, ...COPY[id] }));
 
   // ------------------------------------------------------------------- FX
