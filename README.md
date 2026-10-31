@@ -67,6 +67,35 @@ small status tags ("Lean-verified · not yet refereed", "under review", "mass ga
 
 **Render:** `tools/render.mjs` drives headless Chromium (SwiftShader) with parallel workers. Raw RGBA frames go over HTTP into ffmpeg (FFV1 intermediates), then into x264 with BT.709 tags and AAC.
 
+## Sound effects
+
+Every effect is synthesized in `tools/build_sfx.py` (numpy, modal/physical models, seeded;
+no samples) and mixed about 15 dB under the score, then through a look-ahead limiter to
+-1.2 dBTP. Cue times come from `tools/sfx_events.mjs`, which reads them from the same
+functions that time the picture (`stoneSchedule`, `plySchedule`, `ringTimes`,
+`percolationBonds`, `imoStrokes`, `jacobianTimes` and the cue sheet's `events`), so every
+sound lands on its frame. Effects are mixed into a circular buffer one loop long, so tails
+ring across the seam.
+
+| moment | sound |
+|---|---|
+| AlphaGo moves 1–36, Move 37 | Go stone on a kaya board (click + board modes), panned by column; Move 37 louder with a low thump and a long tail |
+| Deep Blue's last five plies | felted wooden piece on a board; captures lift the taken piece first |
+| the opening rewind | tape whir that spins up and winds down as the head lands in 1950 |
+| Shannon's rings, ignition | escapement ticks per ring; a sub bloom on the downbeat |
+| the head's travels | air whoosh following its speed |
+| IMO constructions | pencil strokes, one per line |
+| Jacobian | a bell as both witness points land on one point |
+| percolation | a crackle, one snap per bond as it opens |
+| Navier–Stokes | swirling wind at the swirl rate; a boom at the blow-up T* |
+| 722 manuscripts | paper flutter; ticks as the Lean marks flip |
+| ETH refuted ×2 | glass shatters as each barrier breaks |
+
+```bash
+node tools/sfx_events.mjs
+python3 -I tools/build_sfx.py   # -> assets/audio/soundtrack_mix.wav (used by the encoder and live mode)
+```
+
 ## Master
 
 `dist/the-curve_1080x1920.mp4`: H.264 High, 1080×1920, 30 fps, 2488 frames, two-pass 8.6 Mbps,

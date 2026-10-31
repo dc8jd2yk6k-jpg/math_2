@@ -40,16 +40,23 @@ function boardTexture() {
   return tex;
 }
 
-export function deepblue(ctx) {
-  const m = base(ctx, 'deepblue');
-  const B = ctx.B;
+// The animated plies: each lands on its beat (also read by tools/sfx_events.mjs).
+export function plySchedule(B) {
   const chess = new Chess();
   chess.loadPgn(PGN);
   const moves = chess.history({ verbose: true });
+  const beats = ['b7.2', 'b7.4', 'b8.2', 'b8.4', 'b9.2'].map((l) => B(l));
+  return { moves, shown: moves.slice(moves.length - SHOWN).map((mv, i) => ({ mv, t: beats[i], capture: !!mv.captured })) };
+}
+
+export function deepblue(ctx) {
+  const m = base(ctx, 'deepblue');
+  const B = ctx.B;
+  const { moves, shown: plies } = plySchedule(B);
   const start = new Chess();
   moves.slice(0, moves.length - SHOWN).forEach((mv) => start.move(mv.san));
-  const shown = moves.slice(moves.length - SHOWN);
-  const beats = ['b7.2', 'b7.4', 'b8.2', 'b8.4', 'b9.2'].map((l) => B(l));
+  const shown = plies.map((p) => p.mv);
+  const beats = plies.map((p) => p.t);
 
   const board = new THREE.Group();
   board.position.set(0, -LIFT, 0);

@@ -11,10 +11,11 @@ import { clamp, mulberry32 } from '../core/math.js';
 
 const PC = 0.2488;
 
-export function percolation(ctx) {
-  const m = base(ctx, 'percolation');
-  const B = ctx.B;
-  const L = 16, S = 0.44, half = ((L - 1) * S) / 2;
+const L = 16;
+
+// The seeded bonds open at p = PC * (time fraction), union-find gives cluster rank.
+// Pure, so tools/sfx_events.mjs can crackle exactly when each bond appears.
+export function percolationBonds(B) {
   const rng = mulberry32(2488);
   const id = (x, y, z) => x + L * (y + L * z);
   const parent = new Int32Array(L * L * L).map((_, i) => i);
@@ -33,14 +34,22 @@ export function percolation(ctx) {
   for (const bd of bonds) { const r = find(bd.a); size.set(r, (size.get(r) || 0) + 1); }
   const ranked = [...size.entries()].sort((a, b) => b[1] - a[1]);
   const rank = new Map(ranked.map(([r], i) => [r, i]));
-  m.largest = ranked[0][1];
+  const tS = B('b23.1'), tE = B('b24.1');
+  for (const bd of bonds) { bd.rank = rank.get(find(bd.a)); bd.t0 = tS + (bd.u / PC) * (tE - tS); }
+  return { bonds, largest: ranked[0][1], tS, tE };
+}
+
+export function percolation(ctx) {
+  const m = base(ctx, 'percolation');
+  const B = ctx.B;
+  const S = 0.44, half = ((L - 1) * S) / 2;
+  const { bonds, largest, tS, tE } = percolationBonds(B);
+  m.largest = largest;
   m.open = bonds.length;
 
-  const tS = B('b23.1'), tE = B('b24.1');
   const W = (v) => new THREE.Vector3(v[1] * S - half, v[0] * S - half, v[2] * S - half);
   const lines = bonds.map((bd) => {
-    const r = rank.get(find(bd.a));
-    const t0 = tS + (bd.u / PC) * (tE - tS);
+    const r = bd.rank, t0 = bd.t0;
     const color = r === 0 ? new THREE.Color(1, 0.16, 0.1) : r < 6 ? new THREE.Color(1, 0.92, 0.88) : new THREE.Color(0.55, 0.6, 0.7);
     const gain = r === 0 ? 1.9 : r < 6 ? 0.6 : 0.12;
     return { pts: [W(bd.p), W(bd.q)], t0, t1: t0 + 0.1, color, gain, width: r === 0 ? 1.8 : 1.2 };

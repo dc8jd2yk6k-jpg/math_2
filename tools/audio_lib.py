@@ -118,3 +118,36 @@ def true_peak_db(x, oversample=4):
             up = np.fft.irfft(F, len(blk) * oversample) * oversample
             peak = max(peak, float(np.abs(up).max()))
     return 20 * np.log10(peak + 1e-12)
+
+
+def limit(x, ceiling_db=-1.2, lookahead=96, release_s=0.08, block=32, circular=False):
+    """Look-ahead peak limiter (stereo-linked). The gain is computed per block from the
+    peak over the coming look-ahead window, applied instantly on the way down and
+    released with a one-pole on the way up, then interpolated per sample. With
+    circular=True the look-ahead and release wrap around, so a loop stays seamless.
+    The ceiling is a sample peak; leave ~0.2 dB under the true-peak target."""
+    thr = 10 ** (ceiling_db / 20)
+    n = len(x)
+    peak = np.abs(x).max(axis=1)
+    # running max over [i, i + lookahead) by doubling shifts
+    m = peak.copy()
+    span = 1
+    while span < lookahead:
+        step = min(span, lookahead - span)
+        m = np.maximum(m, np.roll(m, -step) if circular else np.concatenate([m[step:], np.zeros(step)]))
+        span += step
+    nb = int(np.ceil(n / block))
+    pad = np.zeros(nb * block)
+    pad[:n] = m
+    want = np.minimum(1.0, thr / np.maximum(pad.reshape(nb, block).max(axis=1), 1e-9))
+    rel = np.exp(-block / (release_s * 48000))
+    g = np.empty(nb)
+    passes = 2 if circular else 1  # second pass settles the release across the wrap
+    cur = 1.0
+    for _ in range(passes):
+        for i in range(nb):
+            cur = want[i] if want[i] < cur else want[i] + (cur - want[i]) * rel
+            g[i] = cur
+    # per-sample gain: never above the block's own value at its start (no overshoot)
+    gs = np.repeat(np.minimum(g, np.roll(g, -1) if circular else np.append(g[1:], g[-1])), block)[:n]
+    return x * gs[:, None]

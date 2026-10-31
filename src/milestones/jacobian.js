@@ -19,6 +19,9 @@ const F = (x, y, z) => {
   return [z * u ** 3 + y * y * u * (4 + 3 * x * y), y + 3 * x * u * u * z + 3 * x * y * y * (4 + 3 * x * y), 2 * x - 3 * x * x * y - x ** 3 * z];
 };
 
+// the morph runs tM0 -> tM1; at tM1 both witness points land on the same image point
+export function jacobianTimes(B) { return { tM0: B('b21.3'), tM1: B('b22.2') }; }
+
 export function jacobian(ctx) {
   const m = base(ctx, 'jacobian');
   const B = ctx.B;
@@ -117,7 +120,7 @@ export function jacobian(ctx) {
   m.anchor = { pP, pQ, pImg };
   let lastL = -1;
 
-  const tM0 = B('b21.3'), tM1 = B('b22.2');
+  const { tM0, tM1 } = jacobianTimes(B);
   m.lambda = (t) => ease.inOutCubic(clamp((t - tM0) / (tM1 - tM0)));
   m.update = (t, st) => {
     const life = m.alive(st);

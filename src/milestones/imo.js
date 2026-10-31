@@ -44,6 +44,17 @@ function plane(origin, e1, e2, scale) {
 const circlePts = (c, r, n = 128) => Array.from({ length: n }, (_, i) => V2(c.x + r * Math.cos((i / n) * TAU), c.y + r * Math.sin((i / n) * TAU)));
 const lineThrough = (p, d, a, b) => [p.clone().addScaledVector(d, a), p.clone().addScaledVector(d, b)];
 
+// When each construction stroke draws, [t0, t1] (also read by tools/sfx_events.mjs for
+// the pencil sounds). Order matches the strokes below.
+export function imoStrokes(B) {
+  const w = (l, a = 0, b = 0.8) => [B(l, a), B(l, b)];
+  return {
+    y2024: [w('b15.1', 0, 0.8), w('b15.2', 0, 0.8), w('b15.3', 0, 0.5), w('b15.3', 0.25, 0.75), w('b15.3', 0, 0.4), w('b15.4', 0, 0.8),
+      w('b15.4', 0.3, 0.8), w('b16.1', 0, 0.4), w('b16.1', 0, 0.4), w('b16.1', 0.4, 0.8), w('b16.1', 0.4, 0.8), w('b16.2', 0, 0.5), w('b16.2', 0.3, 0.8)],
+    y2025: [0, 1, 2].map((i) => w('b17.2', i, i + 0.4)).concat([0, 1, 2].map((i) => w('b18.1', i * 0.66, i * 0.66 + 0.45))),
+  };
+}
+
 function scoreRow(hud, x, y, scores, t0, t, alpha) {
   const cell = 64, gap = 12;
   const total = scores.length * cell + (scores.length - 1) * gap;
@@ -100,26 +111,28 @@ export function imo2024(ctx) {
   const P3 = (v) => map(v).applyMatrix4(rot);
   const bt = (l, k = 0) => B(l, k);
   const lines = [];
-  const add = (pts2, t0, t1, opts = {}) => lines.push({ pts: pts2.map(P3), t0, t1, ...opts });
-  add([Ap, Bp, Cp, Ap], bt('b15.1'), bt('b15.1', 0.8), { gain: 1.8 });
-  add(circlePts(I, r), bt('b15.2'), bt('b15.2', 0.8), { closed: false });
+  const SW = imoStrokes(B).y2024;
+  let k = 0;
+  const add = (pts2, opts = {}) => { const [t0, t1] = SW[k++]; lines.push({ pts: pts2.map(P3), t0, t1, ...opts }); };
+  add([Ap, Bp, Cp, Ap], { gain: 1.8 });
+  add(circlePts(I, r), { closed: false });
   const dAC = Cp.clone().sub(Ap).normalize(), dAB = Ap.clone().sub(Bp).normalize();
-  add(lineThrough(Xs, dAC, -1.6, 4.2), bt('b15.3'), bt('b15.3', 0.5), { gain: 1.0 });
-  add(lineThrough(Ys, dAB, -1.4, 4.4), bt('b15.3', 0.25), bt('b15.3', 0.75), { gain: 1.0 });
-  add([V2(-0.8, 0), V2(7.8, 0)], bt('b15.3'), bt('b15.3', 0.4), { gain: 0.9 });
-  add(circlePts(O, R, 160), bt('b15.4'), bt('b15.4', 0.8), { gain: 1.2 });
-  add([Ap, P], bt('b15.4', 0.3), bt('b15.4', 0.8), { gain: 1.1 });
-  add([I, K], bt('b16.1'), bt('b16.1', 0.4), { gain: 1.6 });
-  add([I, L], bt('b16.1'), bt('b16.1', 0.4), { gain: 1.6 });
-  add([P, Xs], bt('b16.1', 0.4), bt('b16.1', 0.8), { gain: 1.6 });
-  add([P, Ys], bt('b16.1', 0.4), bt('b16.1', 0.8), { gain: 1.6 });
+  add(lineThrough(Xs, dAC, -1.6, 4.2), { gain: 1.0 });
+  add(lineThrough(Ys, dAB, -1.4, 4.4), { gain: 1.0 });
+  add([V2(-0.8, 0), V2(7.8, 0)], { gain: 0.9 });
+  add(circlePts(O, R, 160), { gain: 1.2 });
+  add([Ap, P], { gain: 1.1 });
+  add([I, K], { gain: 1.6 });
+  add([I, L], { gain: 1.6 });
+  add([P, Xs], { gain: 1.6 });
+  add([P, Ys], { gain: 1.6 });
   const arc = (ctr, u, v, rad, col) => {
     const a0 = Math.atan2(u.y - ctr.y, u.x - ctr.x), a1 = Math.atan2(v.y - ctr.y, v.x - ctr.x);
     let d = a1 - a0; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU;
     return Array.from({ length: 40 }, (_, i) => V2(ctr.x + rad * Math.cos(a0 + (d * i) / 39), ctr.y + rad * Math.sin(a0 + (d * i) / 39)));
   };
-  add(arc(I, K, L, 0.55, RED), bt('b16.2'), bt('b16.2', 0.5), { color: RED, gain: 3, width: 2.6 });
-  add(arc(P, Ys, Xs, 0.75, RED), bt('b16.2', 0.3), bt('b16.2', 0.8), { color: RED, gain: 3, width: 2.6 });
+  add(arc(I, K, L, 0.55, RED), { color: RED, gain: 3, width: 2.6 });
+  add(arc(P, Ys, Xs, 0.75, RED), { color: RED, gain: 3, width: 2.6 });
   const art = new FatLines(lines, { color: WHITE, width: 1.7, gain: 1.4 });
   const pts = { A: Ap, B: Bp, C: Cp, I, X: Xs, Y: Ys, P, K, L };
   const when = { A: 'b15.1', B: 'b15.1', C: 'b15.1', I: 'b15.2', X: 'b15.3', Y: 'b15.3', P: 'b15.4', K: 'b16.1', L: 'b16.1' };
@@ -171,12 +184,13 @@ export function imo2025(ctx) {
   const dots = new Dots(pts.map((p, i) => ({ p: P3(p), size: 8, t0: B('b17.1') + i * 0.025 })), { gain: 4 });
   const lines = [];
   // non-sunny diagonals x + y = 7, 6, 5
-  [7, 6, 5].forEach((s, i) => lines.push({ pts: [P3(V2(s - 0.4, 0.4)), P3(V2(0.4, s - 0.4))], t0: B('b17.2', i), t1: B('b17.2', i + 0.4), gain: 1.5 }));
+  const SW = imoStrokes(B).y2025;
+  [7, 6, 5].forEach((s, i) => lines.push({ pts: [P3(V2(s - 0.4, 0.4)), P3(V2(0.4, s - 0.4))], t0: SW[i][0], t1: SW[i][1], gain: 1.5 }));
   // sunny lines through the inner six points
   const sunny = [[V2(1, 2), V2(3, 1)], [V2(2, 1), V2(1, 3)], [V2(1, 1), V2(2, 2)]];
   sunny.forEach(([p, q], i) => {
     const d = q.clone().sub(p).normalize();
-    lines.push({ pts: [P3(p.clone().addScaledVector(d, -1.1)), P3(q.clone().addScaledVector(d, 1.1))], t0: B('b18.1', i * 0.66), t1: B('b18.1', i * 0.66 + 0.45), color: GOLD, gain: 3.2, width: 2.6 });
+    lines.push({ pts: [P3(p.clone().addScaledVector(d, -1.1)), P3(q.clone().addScaledVector(d, 1.1))], t0: SW[3 + i][0], t1: SW[3 + i][1], color: GOLD, gain: 3.2, width: 2.6 });
   });
   // axes
   lines.push({ pts: [P3(V2(0, 0)), P3(V2(n + 1.3, 0))], t0: B('b17.1'), t1: B('b17.1', 0.6), gain: 0.5 });

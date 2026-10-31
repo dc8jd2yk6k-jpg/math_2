@@ -49,7 +49,9 @@ if (RENDER) {
   window.__ready = true;
 } else {
   canvas.style.cssText = 'height:100vh;width:auto;display:block;margin:0 auto;';
-  const audio = new Audio('assets/audio/soundtrack.wav');
+  // the score with the sound effects (tools/build_sfx.py), falling back to the score alone
+  const audio = new Audio('assets/audio/soundtrack_mix.wav');
+  audio.addEventListener('error', () => { audio.src = 'assets/audio/soundtrack.wav'; }, { once: true });
   audio.loop = true;
   const t0 = performance.now();
   const hint = document.createElement('div');

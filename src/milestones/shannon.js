@@ -10,6 +10,12 @@ import { clamp, ease, mulberry32, TAU } from '../core/math.js';
 
 const RED = new THREE.Color(1.0, 0.1, 0.06);
 
+// when each of the 12 rings starts to draw (also read by tools/sfx_events.mjs)
+export function ringTimes(B, spb) {
+  const tG = B('b60.3'), d32 = spb / 8;
+  return Array.from({ length: 12 }, (_, k) => tG + Math.round(k * 1.5) * d32);
+}
+
 export function shannon(ctx) {
   const m = base(ctx, 'shannon');
   const rng = mulberry32(1950);
@@ -22,13 +28,14 @@ export function shannon(ctx) {
 
   const RINGS = 12, R0 = 0.45, DR = 0.27;
   // the rings draw in one per 32nd note, inside out, from the moment the head lands
-  const tG = ctx.B('b60.3'), d32 = ctx.beat.spb / 8;
+  const tG = ctx.B('b60.3');
+  const ringT = ringTimes(ctx.B, ctx.beat.spb);
   const rings = [];
   for (let k = 1; k <= RINGS; k++) {
     const r = R0 + DR * k;
     const pts = [];
     for (let i = 0; i < 160; i++) pts.push(disc(r, (i / 160) * TAU));
-    const t0 = tG + Math.round((k - 1) * 1.5) * d32;
+    const t0 = ringT[k - 1];
     rings.push({ pts, closed: true, color: RED, gain: 2.4 - k * 0.1, width: 1.7, t0, t1: t0 + 0.14 });
   }
   const ringLines = new FatLines(rings, { width: 1.6 });

@@ -26,6 +26,7 @@ const PRESETS = {
   final: { w: 1080, h: 1920, sub: 4, msaa: 0, workers: 2, codec: 'ffv1', out: 'dist/the-curve_1080x1920.mp4', vbitrate: '8600k' },
 };
 const cfg = { ...(PRESETS[args.preset] || PRESETS.preview), ...Object.fromEntries(Object.entries(args).filter(([k]) => k !== 'preset')) };
+const PARTS = path.join(ROOT, cfg['parts-dir'] || 'work/parts'); // where the per-worker video parts go
 const W = +cfg.w, H = +cfg.h, SUB = +cfg.sub, WORKERS = +cfg.workers;
 const beatmap = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/beatmap.json'), 'utf8'));
 const FRAMES = beatmap.frames, FPS = beatmap.fps;
@@ -106,7 +107,7 @@ async function worker(id, frames, onFrame) {
 
 const t0 = Date.now();
 if (cfg['encode-only']) {
-  encode(path.join(ROOT, 'work/parts/list.txt'));
+  encode(path.join(PARTS, 'list.txt'));
   console.log(`-> ${cfg.out}`);
 } else if (cfg.stills) {
   const list = String(cfg.stills).split(',').map(Number);
@@ -120,20 +121,23 @@ if (cfg['encode-only']) {
   const from = +(cfg.from ?? 0), to = +(cfg.to ?? FRAMES), step = +(cfg.step ?? 1);
   const all = []; for (let i = from; i < to; i += step) all.push(i);
   const per = Math.ceil(all.length / WORKERS);
-  fs.mkdirSync(path.join(ROOT, 'work/parts'), { recursive: true });
+  fs.mkdirSync(PARTS, { recursive: true });
   const ext = cfg.codec === 'ffv1' ? 'mkv' : 'mp4';
   const parts = [];
   await Promise.all(Array.from({ length: WORKERS }, (_, w) => all.slice(w * per, (w + 1) * per)).filter((l) => l.length).map(async (l, w) => {
-    const file = path.join(ROOT, `work/parts/part${w}.${ext}`);
+    const file = path.join(PARTS, `part${w}.${ext}`);
     parts[w] = file;
     const sink = ffmpegSink(file, cfg.codec);
     await worker(w, l, () => sink.write);
     await sink.close();
   }));
-  const list = path.join(ROOT, 'work/parts/list.txt');
+  const list = path.join(PARTS, 'list.txt');
   fs.writeFileSync(list, parts.map((p) => `file '${p}'`).join('\n'));
-  encode(list, step);
-  console.log(`-> ${cfg.out}  (${all.length} frames, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
+  if (cfg['no-encode']) console.log(`parts -> ${PARTS}  (${all.length} frames, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
+  else {
+    encode(list, step);
+    console.log(`-> ${cfg.out}  (${all.length} frames, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
+  }
 }
 
 // Final encode from the lossless parts (re-runnable on its own with --encode-only).
@@ -141,7 +145,10 @@ function encode(list, step = 1) {
   const out = path.join(ROOT, cfg.out);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const rate = step === 1 ? [] : ['-r', String(FPS / step)];
-  const audio = step === 1 && !cfg.noaudio ? ['-i', path.join(ROOT, 'assets/audio/soundtrack.wav')] : [];
+  // the score with the sound effects mixed in (tools/build_sfx.py), else the score alone
+  const mixed = path.join(ROOT, 'assets/audio/soundtrack_mix.wav');
+  const track = fs.existsSync(mixed) ? mixed : path.join(ROOT, 'assets/audio/soundtrack.wav');
+  const audio = step === 1 && !cfg.noaudio ? ['-i', track] : [];
   const tags = ['-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
   const lossless = cfg.codec === 'ffv1';
   const vf = lossless ? ['-vf', 'scale=out_color_matrix=bt709:out_range=tv'] : [];

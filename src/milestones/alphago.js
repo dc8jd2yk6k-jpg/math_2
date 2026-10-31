@@ -40,11 +40,19 @@ function goTexture() {
   return { tex, frac: (N - 2 * m) / N };
 }
 
+// Moves 1-37 with their placement times (also read by tools/sfx_events.mjs, so the
+// stone sounds land on the very frames the stones do).
+export function stoneSchedule(B, sgf) {
+  const moves = [...sgf.matchAll(/;([BW])\[([a-s]{2})\]/g)].map((x) => ({ c: x[1], x: x[2].charCodeAt(0) - 97, y: x[2].charCodeAt(1) - 97 }));
+  const t37 = B('b12.1');
+  const tA = B('b9.4'), tB = t37 - 0.22;
+  return moves.slice(0, 37).map((mv, i) => ({ ...mv, n: i + 1, t: i < 36 ? tA + ((tB - tA) * i) / 35 : t37 }));
+}
+
 export function alphago(ctx) {
   const m = base(ctx, 'alphago');
   const B = ctx.B;
-  const moves = [...ctx.assets.sgf.matchAll(/;([BW])\[([a-s]{2})\]/g)].map((x) => ({ c: x[1], x: x[2].charCodeAt(0) - 97, y: x[2].charCodeAt(1) - 97 }));
-  const first = moves.slice(0, 37);
+  const first = stoneSchedule(B, ctx.assets.sgf);
   const pos = (mv, h = 0) => new THREE.Vector3((9 - mv.y) * SP, h, (mv.x - 9) * SP);
 
   const board = new THREE.Group();
@@ -66,12 +74,11 @@ export function alphago(ctx) {
     W: new THREE.MeshPhysicalMaterial({ color: 0xf1ede4, roughness: 0.34, clearcoat: 0.5, envMap: ctx.envMap, envMapIntensity: 0.6 }),
   };
   const t37 = B('b12.1');
-  const tA = B('b9.4'), tB = t37 - 0.22;
-  const stones = first.map((mv, i) => {
+  const stones = first.map((mv) => {
     const s = new THREE.Mesh(stoneGeo, mats[mv.c]);
     s.position.copy(pos(mv, 0.07));
     board.add(s);
-    return { s, t: i < 36 ? tA + ((tB - tA) * i) / 35 : t37 };
+    return { s, t: mv.t };
   });
 
   // shock ring for Move 37
