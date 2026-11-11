@@ -137,3 +137,4 @@ cross-correlation, and checks the loop seam.
 - **Game records:** AlphaGo vs Lee Sedol Game 2 from [Andries Brouwer's archive](https://homepages.cwi.nl/~aeb/go/games/games/AlphaGo/). Deep Blue vs Kasparov 1997 Game 6 was validated with chess.js.
 - **Fonts (SIL OFL 1.1):** Inter, JetBrains Mono, Crimson Pro, Instrument Serif. **Math:** MathJax.
 - **Code and visuals:** written by Claude.
+- **Idea:** https://linux.do/t/topic/2958403
