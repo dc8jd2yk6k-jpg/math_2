@@ -1,6 +1,6 @@
 # THE CURVE — AI × Mathematics, 1950 → 2026
 
-A one-shot, beat-locked, seamlessly looping vertical short (1080×1920, 30 fps, 82.93 s).
+A one-shot, beat-locked, seamlessly looping vertical short (1080×1920, 30 fps, 87.3 s).
 A red comet head draws its own trajectory through a 3D starfield. Milestones are threaded
 onto the line, from Shannon's 1950 chess paper to the two refutations of the Exponential
 Time Hypothesis in October 2026. The final pull-back reveals the path as the hockey stick
@@ -39,10 +39,11 @@ as a pure function of time. The same page plays live in a browser.
 | 0:49 | perc. burst | **2026.09.08 · Navier–Stokes** | OpenAI: the vortex spirals inward and stretches; the camera rides inside its eye, scale-locked, as the core collapses toward T*; the head reaches the singular point on the downbeat and the core bursts |
 | 1:02 | climax | **2026.10.06 · 722 manuscripts** | OpenAI: 722 papers burst into a helix tunnel; 162 carry Lean-checked main results |
 | 1:06 | climax | **2026.10.27 · Yang–Mills existence** | OpenAI (plus Kakeya): the Hopf fibration, whose axis fiber is the film's own trajectory |
-| 1:10 | climax | **ETH refuted ×2** | OpenAI, then hours later Claude (Anthropic): two exponential barriers shatter, and a rival comet joins on a parallel track |
-| 1:14 | climax | **escape** | The head leaves the top of the frame for good |
-| 1:15 | climax | **pull-back** | The whole curve over a 1950–2026 axis: decades → years → months → days → hours |
-| 1:19 | stabs | **the dive** | Back into the Navier–Stokes vortex, one zoom surge per stab: u(x,t) → λu(λx, λ²t), t → T* |
+| 1:10 | climax | **ETH refuted ×2** | OpenAI, then hours later Claude (Anthropic): two exponential barriers shatter, the labs named beside them |
+| 1:14 | climax | **2026.11.20 · Riemann Hypothesis** | Levent Alpöge (Anthropic) with Claude: a proof of RH and GRH claimed and released as Lean code, **not yet independently verified**. The curve becomes the critical line Re(s) = ½ through the landscape log\|ζ(σ + it)\| over the critical strip (Euler–Maclaurin, `src/core/zeta.js`); the first ten zeros light up on eighth notes, each with its own bell tone |
+| 1:18 | climax | **escape** | The head leaves the top of the frame for good |
+| 1:19 | climax | **pull-back** | The whole curve over a 1950–2026 axis: decades → years → months → days → hours |
+| 1:23 | stabs | **the dive** | Back into the Navier–Stokes vortex, one zoom surge per stab: u(x,t) → λu(λx, λ²t), t → T* |
 
 Dates follow the brief where it gave them (09.08, 10.06, 10.27); the others are the reported
 announcement dates. Many 2026 results are recent and still under review. The film says so in
@@ -90,6 +91,7 @@ ring across the seam.
 | Navier–Stokes | swirling wind at the swirl rate; a boom at the blow-up T* |
 | 722 manuscripts | paper flutter; ticks as the Lean marks flip |
 | ETH refuted ×2 | glass shatters as each barrier breaks |
+| Riemann Hypothesis | a bell tone for each zero as it lights, pitched by its height t on the critical line |
 
 ```bash
 node tools/sfx_events.mjs
@@ -130,6 +132,7 @@ cross-correlation, and checks the loop seam.
 - 722 manuscripts: [Wikipedia, "OpenAI bulk release of mathematical papers"](https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers)
 - Yang–Mills / Kakeya / ETH: [Scientific American, "Dueling proofs from OpenAI and Anthropic astound scientists"](https://www.scientificamerican.com/article/dueling-proofs-from-openai-and-anthropic-astound-scientists/); [Washington Times](https://www.washingtontimes.com/news/2026/oct/27/openai-says-model-refuted-exponential-time-hypothesis/)
 - IMO 2025 gold: [Simon Willison](https://simonwillison.net/2025/Jul/21/gemini-imo/)
+- Riemann Hypothesis (claimed, Nov 20 2026): [the announcement, "Remark"](https://alpo.ge/remark.pdf); [Scientific American, "Anthropic mathematician claims to prove Riemann hypothesis"](https://www.scientificamerican.com/article/anthropic-mathematician-claims-to-prove-riemann-hypothesis-most-famous-problem-in-all-of-math/)
 
 ## Credits
 
