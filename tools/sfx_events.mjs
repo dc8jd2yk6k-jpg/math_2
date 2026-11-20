@@ -14,6 +14,7 @@ import { ringTimes } from '../src/milestones/shannon.js';
 import { percolationBonds } from '../src/milestones/percolation.js';
 import { jacobianTimes } from '../src/milestones/jacobian.js';
 import { imoStrokes } from '../src/milestones/imo.js';
+import { zeroTimes } from '../src/milestones/riemann.js';
 
 const read = (p) => fs.readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 const beat = new Beat(JSON.parse(read('data/beatmap.json')));
@@ -70,11 +71,13 @@ push({ t: B('b33.1', -1), type: 'wind', dur: B('b38.4', 1) - B('b33.1', -1), cur
 push({ t: ev.loopWindow[0], type: 'wind', dur: ev.loopWindow[1] + T - ev.loopWindow[0], curve: windCurve(ev.loopWindow[0], ev.loopWindow[1] + T) });
 push({ t: ev.tStar, type: 'boom' });
 // 722 manuscripts: paper flicks as the cards launch, ticks as the Lean marks flip
-const tBurst = B('b49.1');
+const tBurst = B('b47.1');
 for (let i = 0; i < 722; i += 6) push({ t: tBurst + (i / 722) * 1.7, type: 'paper', i });
-push({ t: B('b50.1'), type: 'lean' });
+push({ t: B('b48.1'), type: 'lean' });
 // ETH: the head breaks each barrier
 ev.ethHits.forEach((t, i) => push({ t, type: 'shatter', i }));
+// the Riemann Hypothesis: a tone for each zero as it lights, pitched by its height on the line
+for (const z of zeroTimes(B)) push({ t: z.t, type: 'zero', im: z.im, k: z.k });
 
 out.sort((a, b) => a.t - b.t);
 const counts = {};

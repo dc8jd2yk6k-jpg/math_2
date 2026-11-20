@@ -83,10 +83,10 @@ export function manuscripts(ctx) {
   g.setAttribute('aUv', new THREE.Float32BufferAttribute(uv, 2));
   g.setAttribute('aD', new THREE.Float32BufferAttribute(d, 4));
   g.setIndex(idx);
-  const tBurst = B('b49.1');
+  const tBurst = B('b47.1');
   const mat = new THREE.ShaderMaterial({
     vertexShader: VERT, fragmentShader: FRAG,
-    uniforms: { uTime: { value: 0 }, uT0: { value: tBurst }, uSpread: { value: 1.7 }, uN: { value: N }, uAlpha: { value: 1 }, uLeanT: { value: B('b50.1') } },
+    uniforms: { uTime: { value: 0 }, uT0: { value: tBurst }, uSpread: { value: 1.7 }, uN: { value: N }, uAlpha: { value: 1 }, uLeanT: { value: B('b48.1') } },
     side: THREE.DoubleSide, transparent: true, depthWrite: false,
     blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendEquation: THREE.AddEquation,
   });
@@ -106,8 +106,8 @@ export function manuscripts(ctx) {
     const fade = 1 - clamp((t - (m.tOut - 0.4)) / 0.35);
     const n = m.count(t);
     hud.text(`${String(n).padStart(3, '0')} / 722`, 540, 600, { family: 'JBM', size: 60, weight: 300, alpha: fade, glow: 16 });
-    const lean = Math.round(LEAN * clamp((t - B('b50.1')) / 1.2));
-    hud.text(`${lean} with Lean-checked main results`, 540, 668, { size: 26, weight: 500, alpha: fade * clamp((t - B('b50.1')) / 0.3) * 0.85, color: '#ffb3a8' });
+    const lean = Math.round(LEAN * clamp((t - B('b48.1')) / 1.2));
+    hud.text(`${lean} with Lean-checked main results`, 540, 668, { size: 26, weight: 500, alpha: fade * clamp((t - B('b48.1')) / 0.3) * 0.85, color: '#ffb3a8' });
   };
   return m;
 }

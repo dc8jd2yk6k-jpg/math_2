@@ -81,7 +81,7 @@ export function ethOpenAI(ctx) {
   const B = ctx.B;
   const wall = barrier(53, new THREE.Color(0.95, 0.97, 1.0));
   m.group.add(wall);
-  const hit = B('b53.1');
+  const hit = B('b51.1');
   m.update = (t, st) => {
     const life = m.alive(st);
     wall.visible = t > m.tIn - 2.5 && life > 0.001;
@@ -89,7 +89,7 @@ export function ethOpenAI(ctx) {
     u.uT.value = t; u.uHit.value = hit;
     u.uAlpha.value = life * clamp((t - (m.tIn - 2.5)) / 1.0);
   };
-  const until = B('b54.4', 1); // the label stays until the second result's block ends
+  const until = B('b52.4', 1); // the label stays until the second result's block ends
   m.labels = (t, hud, project) => {
     labLabel(hud, project, m, 'OpenAI', -1, clamp((t - m.tIn + 0.5) / 0.3) * (1 - clamp((t - until) / 0.3)));
     if (t < m.tIn - 1.5 || t > m.tOut + 0.4) return;
@@ -107,7 +107,7 @@ export function ethClaude(ctx) {
   const B = ctx.B;
   const wall = barrier(54, new THREE.Color(1.0, 0.82, 0.78));
   m.group.add(wall);
-  const hit = B('b54.1');
+  const hit = B('b52.1');
   m.update = (t, st) => {
     const life = m.alive(st);
     wall.visible = t > m.tIn - 2.5 && life > 0.001;

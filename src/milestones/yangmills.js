@@ -34,7 +34,7 @@ export function yangmills(ctx) {
       const pts = Array.from({ length: SEG }, () => new THREE.Vector3());
       const col = new THREE.Color().setHSL(0.0, lerp(0.0, 0.9, li / (LATS.length - 1)), lerp(0.92, 0.55, li / (LATS.length - 1)));
       fibers.push({ phi: lat * Math.PI, theta0: (j / PER) * TAU, pts, closed: true, color: col, gain: li === LATS.length - 1 ? 2.2 : 1.4, width: 1.3,
-        t0: B('b51.1', li * 0.6) + j * 0.012, t1: B('b51.1', li * 0.6 + 0.5) + j * 0.012 });
+        t0: B('b49.1', li * 0.6) + j * 0.012, t1: B('b49.1', li * 0.6 + 0.5) + j * 0.012 });
     }
   });
   const SC = 2.0;
@@ -69,8 +69,8 @@ export function yangmills(ctx) {
   m.labels = (t, hud) => {
     if (t < m.tIn - 0.2 || t > m.tOut) return;
     const fade = 1 - clamp((t - (m.tOut - 0.4)) / 0.35);
-    hud.tex(ctx.assets.tex.ym, 540, 1410, 74, { alpha: fade * clamp((t - B('b51.3')) / 0.3), reveal: clamp((t - B('b51.3')) / 0.5) });
-    hud.text('existence ✓      mass gap: open', 540, 1500, { family: 'JBM', size: 26, alpha: fade * 0.85 * clamp((t - B('b52.2')) / 0.3) });
+    hud.tex(ctx.assets.tex.ym, 540, 1410, 74, { alpha: fade * clamp((t - B('b49.3')) / 0.3), reveal: clamp((t - B('b49.3')) / 0.5) });
+    hud.text('existence ✓      mass gap: open', 540, 1500, { family: 'JBM', size: 26, alpha: fade * 0.85 * clamp((t - B('b50.2')) / 0.3) });
   };
   return m;
 }

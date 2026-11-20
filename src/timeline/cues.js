@@ -10,8 +10,9 @@ export const CUES = {
   jacobian: ['b21.1', 'b22.4'],
   percolation: ['b23.1', 'b24.4'],
   navierstokes: ['b33.1', 'b38.4'],
-  manuscripts: ['b49.1', 'b50.4'],
-  yangmills: ['b51.1', 'b52.4'],
-  eth_openai: ['b53.1', 'b53.4'],
-  eth_claude: ['b54.1', 'b54.4'],
+  manuscripts: ['b47.1', 'b48.4'],
+  yangmills: ['b49.1', 'b50.4'],
+  eth_openai: ['b51.1', 'b51.4'],
+  eth_claude: ['b52.1', 'b52.4'],
+  riemann: ['b53.1', 'b54.4'],
 };

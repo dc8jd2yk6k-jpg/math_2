@@ -27,6 +27,7 @@ export const COPY = {
   yangmills: { title: 'Yang–Mills existence', sub: 'OpenAI · 4D quantum gauge theory exists (mass gap still open) · plus Kakeya, all dimensions', chip: 'ARTIFACTS NOT YET PUBLIC' },
   eth_openai: { title: 'Exponential Time Hypothesis', sub: 'OpenAI · refuted: satisfiability in subexponential time', chip: 'LEAN-CHECKED · UNDER REVIEW' },
   eth_claude: { title: '…refuted again, hours later', sub: 'Claude (Anthropic) · “A 2^o(n) Time Algorithm for 3-SAT”', chip: 'INDEPENDENT RESULT' },
+  riemann: { title: 'Riemann Hypothesis', sub: 'Levent Alpöge (Anthropic) with Claude · proof claimed for RH and GRH, released as Lean code', chip: 'CLAIMED · NOT YET INDEPENDENTLY VERIFIED' },
 };
 
 const Y = new THREE.Vector3(0, 1, 0);
@@ -74,10 +75,11 @@ export function buildScript(ctx) {
     ...hold(B('b21.1'), B('b22.4'), sM('jacobian')),
     ...hold(B('b23.1'), B('b24.4'), sM('percolation')),
     ...hold(B('b33.1'), B('b38.4'), sNS),              // at the singular point through T*
-    ...hold(B('b49.1'), B('b50.4'), sM('manuscripts')),
-    ...hold(B('b51.1'), B('b52.4'), sM('yangmills')),
-    ...hold(B('b53.1'), B('b53.4'), sM('eth_openai')), // breaks the first barrier on the hit
-    ...hold(B('b54.1'), B('b54.4'), sM('eth_claude')), // and the second
+    ...hold(B('b47.1'), B('b48.4'), sM('manuscripts')),
+    ...hold(B('b49.1'), B('b50.4'), sM('yangmills')),
+    ...hold(B('b51.1'), B('b51.4'), sM('eth_openai')), // breaks the first barrier on the hit
+    ...hold(B('b52.1'), B('b52.4'), sM('eth_claude')), // and the second
+    ...hold(B('b53.1'), B('b54.4'), sM('riemann')),    // up the critical line to the newest result
     // the escape: up the asymptote and out of the top of the frame, for good
     [B('b55.2'), topS + 170], [B('b56.1'), endS], [T, endS],
   ];
@@ -204,7 +206,7 @@ export function buildScript(ctx) {
       const x = tau(t);
       L = Math.min(5, diveD(t));
       Omega = 0.6 + 3.6 * Math.exp(-0.5 * (x / 1.4) * (x / 1.4));
-    } else if (t > t33 - 1.5 && t < B('b49.1')) {
+    } else if (t > t33 - 1.5 && t < B('b47.1')) {
       L = Math.min(5, eventD(t));
       Omega = t <= tStar ? lerp(0.6, 4.5, Math.pow(clamp((t - t33) / (tStar - t33)), 2)) : lerp(4.5, 0.5, smoothstep(tStar, tStar + 2.5, t));
     }
@@ -262,23 +264,25 @@ export function buildScript(ctx) {
     // Navier–Stokes: outside, then inside the eye as it collapses to T*, then the burst
     .add(B('b24.4', 0.2), nsEvent, { blend: 1.0 })
     // 722 manuscripts: the card storm, then inside the helix tunnel
-    .add(B('b49.1', -0.6), orb(P('manuscripts').add(W(0, -2, 0)), { d0: 26, d1: 19, az0: 0.9, az1: 1.3, el0: 0.1, el1: 0.05, fov: 50, k: (t) => S('b49.1', 'b49.4', t) }), { blend: 1.0 })
-    .add(B('b49.4'), (t) => {
-      const u = S('b49.4', 'b50.4', t);
+    .add(B('b47.1', -0.6), orb(P('manuscripts').add(W(0, -2, 0)), { d0: 26, d1: 19, az0: 0.9, az1: 1.3, el0: 0.1, el1: 0.05, fov: 50, k: (t) => S('b47.1', 'b47.4', t) }), { blend: 1.0 })
+    .add(B('b47.4'), (t) => {
+      const u = S('b47.4', 'b48.4', t);
       const c = P('manuscripts');
       return pose(c.clone().add(W(1.6, lerp(-15, -8, u), 0.8)), c.clone().add(W(0, 6, 0)), W(0.96, 0, 0.27), lerp(70, 64, u), 0);
     }, { blend: 1.5 })
     // Yang–Mills: around the bundle, close
-    .add(B('b50.4', -0.6), orb(P('yangmills'), { d0: 11, d1: 8.5, az0: 0.2, az1: 0.8, el0: 0.2, el1: 0.12, fov: 48, k: (t) => S('b51.1', 'b53.1', t) }), { blend: 1.8 })
+    .add(B('b48.4', -0.6), orb(P('yangmills'), { d0: 11, d1: 8.5, az0: 0.2, az1: 0.8, el0: 0.2, el1: 0.12, fov: 48, k: (t) => S('b49.1', 'b51.1', t) }), { blend: 1.8 })
     // ETH: under the barriers looking up as the comets break through and escape
-    .add(B('b52.4', -0.8), orb(P('eth_openai').add(W(0, -5, 0)), { d0: 12, d1: 14, az0: 0.55, az1: 0.85, el0: -0.5, el1: -0.44, fov: 54, k: (t) => S('b53.1', 'b55.1', t), look: P('eth_openai').add(W(0, 7, 0)) }), { blend: 1.6 })
+    .add(B('b50.4', -0.8), orb(P('eth_openai').add(W(0, -5, 0)), { d0: 12, d1: 13, az0: 0.55, az1: 0.75, el0: -0.5, el1: -0.46, fov: 54, k: (t) => S('b51.1', 'b52.4', t), look: P('eth_openai').add(W(0, 7, 0)) }), { blend: 1.6 })
+    // the Riemann Hypothesis: square to the critical strip as the zeros light up the line
+    .add(B('b52.4', -0.6), orb(P('riemann').add(W(0, -13, 0)), { d0: 33, d1: 28, az0: 0.62, az1: 0.32, el0: 0.22, el1: 0.1, fov: 50, k: (t) => S('b52.4', 'b55.1', t) }), { blend: 1.2 })
     // pull back to the whole curve
     .add(B('b55.1', -0.2), (t) => {
       const u = ease.inOutCubic(smoothstep(B('b55.1', -0.2), B('b55.4'), t));
-      const from = P('eth_openai').add(W(0, 6, 0));
+      const from = P('riemann').add(W(0, -13, 0));
       const c = new THREE.Vector3().lerpVectors(from, pullC, ease.inOutQuad(u));
-      const d = Math.exp(lerp(Math.log(30), Math.log(D_PULL), u));
-      const az = lerp(0.7, 0, u), el = lerp(-0.25, 0, u);
+      const d = Math.exp(lerp(Math.log(28), Math.log(D_PULL), u));
+      const az = lerp(0.32, 0, u), el = lerp(0.1, 0, u);
       return pose(c.clone().add(W(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(d)), c.clone().add(W(0, 6 * u, 0)), Y.clone(), lerp(52, 40, u), 0);
     }, { blend: 0.9 })
     .add(B('b57.1', -0.3), dive, { blend: 0.5 });
@@ -309,8 +313,9 @@ export function buildScript(ctx) {
     { t: B('b21.1', -0.5), text: '2026.07.20', roll: 0.5 },
     { t: B('b23.1', -0.5), text: '2026.08.28', roll: 0.5 },
     { t: B('b33.1', -0.5), text: '2026.09.08', roll: 0.5 },
-    { t: B('b49.1', -0.5), text: '2026.10.06', roll: 0.5 },
-    { t: B('b51.1', -0.5), text: '2026.10.27', roll: 0.5 },
+    { t: B('b47.1', -0.5), text: '2026.10.06', roll: 0.5 },
+    { t: B('b49.1', -0.5), text: '2026.10.27', roll: 0.5 },
+    { t: B('b53.1', -0.5), text: '2026.11.20', roll: 0.5 },
     { t: B('b57.1'), text: '2026.09.08', roll: 0.01 },
   ], { roll: 0.5, stagger: 0.03 });
 
@@ -318,14 +323,14 @@ export function buildScript(ctx) {
     ['shannon', B('b5.1'), B('b6.1')], ['deepblue', B('b7.1'), B('b9.4')], ['alphago', B('b10.2'), B('b13.4')],
     ['imo2024', B('b15.1'), B('b16.4')], ['imo2025', B('b17.1'), B('b18.4')], ['erdos', B('b19.1'), B('b20.4')],
     ['jacobian', B('b21.1'), B('b22.4')], ['percolation', B('b23.1'), B('b24.4')], ['navierstokes', B('b33.1'), B('b38.4')],
-    ['manuscripts', B('b49.1'), B('b50.4')], ['yangmills', B('b51.1'), B('b52.4')], ['eth_openai', B('b53.1'), B('b53.4', 0.6)],
-    ['eth_claude', B('b54.1'), B('b54.4', 0.6)],
+    ['manuscripts', B('b47.1'), B('b48.4')], ['yangmills', B('b49.1'), B('b50.4')], ['eth_openai', B('b51.1'), B('b51.4', 0.6)],
+    ['eth_claude', B('b52.1'), B('b52.4', 0.6)], ['riemann', B('b53.1'), B('b54.4', 0.6)],
   ].map(([id, t0, t1]) => ({ id, t0, t1, ...COPY[id] }));
 
   // ------------------------------------------------------------------- FX
   // No glitches, no flashes on beats: only slow bloom swells on the section downbeats
   // and the light of the blow-up itself.
-  const swells = [B('b15.1'), B('b35.1'), B('b49.1')].map((g) => (Math.round(g * fps) - 0.5) / fps);
+  const swells = [B('b15.1'), B('b35.1'), B('b47.1')].map((g) => (Math.round(g * fps) - 0.5) / fps);
   const fx = (t) => {
     let swell = 0;
     for (const g of swells) { const d = t - g; if (d >= 0 && d < 2) swell = Math.max(swell, Math.exp(-d / 0.4)); }
@@ -412,7 +417,7 @@ export function buildScript(ctx) {
     rewind: [r0 + 0.06, B('b60.3')],
     ignition: B('b5.1'),
     tStar,
-    ethHits: [B('b53.1'), B('b54.1')],
+    ethHits: [B('b51.1'), B('b52.1')],
     stabs: stabs.map((x) => (x <= 0 ? x + T : x)),
     loopWindow: [B('b57.1', -0.4), B('b60.4')],
   };

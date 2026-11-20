@@ -10,10 +10,11 @@ import { manuscripts } from './manuscripts.js';
 import { yangmills } from './yangmills.js';
 import { ethOpenAI, ethClaude } from './eth.js';
 import { pullback } from './pullback.js';
+import { riemann } from './riemann.js';
 
 export function createMilestones(ctx) {
   return [
     shannon(ctx), deepblue(ctx), alphago(ctx), imo2024(ctx), imo2025(ctx), erdos(ctx), jacobian(ctx), percolation(ctx),
-    navierstokes(ctx), manuscripts(ctx), yangmills(ctx), ethOpenAI(ctx), ethClaude(ctx), pullback(ctx),
+    navierstokes(ctx), manuscripts(ctx), yangmills(ctx), ethOpenAI(ctx), ethClaude(ctx), riemann(ctx), pullback(ctx),
   ];
 }

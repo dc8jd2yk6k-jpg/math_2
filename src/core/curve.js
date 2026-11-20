@@ -18,7 +18,7 @@ export const SX = 2.5;
 export const YEAR0 = 1950;
 
 // day-of-year fractions for 2026 (non-leap): May 20 = 140, Jul 20 = 201, Aug 28 = 240,
-// Sep 8 = 251, Oct 6 = 279, Oct 27 = 300
+// Sep 8 = 251, Oct 6 = 279, Oct 27 = 300, Nov 20 = 324
 export const YEARS = {
   shannon: 1950.0,
   deepblue: 1997.36,
@@ -33,18 +33,19 @@ export const YEARS = {
   yangmills: 2026 + 300 / 365,
   eth_openai: 2026 + 300.25 / 365,
   eth_claude: 2026 + 300.5 / 365,
+  riemann: 2026 + 324 / 365,
 };
-const TOP_YEAR = 2026 + 300.75 / 365;
+const TOP_YEAR = 2026 + 324.5 / 365;
 
 const KNOTS = [
   [1950.0, 0], [1975, 0.9], [YEARS.deepblue, 3.2], [2008, 9], [YEARS.alphago, 20], [2021, 33],
   [YEARS.imo2024, 50], [YEARS.imo2025, 60], [2026.0, 70],
   [YEARS.erdos, 85], [YEARS.jacobian, 115], [YEARS.percolation, 145], [YEARS.navierstokes, 175],
   [YEARS.manuscripts, 205], [YEARS.yangmills, 235], [YEARS.eth_openai, 262], [YEARS.eth_claude, 289],
-  [TOP_YEAR, 330],
+  [YEARS.riemann, 322], [TOP_YEAR, 352],
 ];
 
-export const TOP_Y = 330;
+export const TOP_Y = 352;
 export const ASYMPTOTE = 520; // straight segment above the last knot
 
 export class Curve {

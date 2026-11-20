@@ -32,6 +32,8 @@ export const EQUATIONS = {
   ym: String.raw`S[A]=\frac{1}{4g^{2}}\int \operatorname{tr}\,F_{\mu\nu}F^{\mu\nu}\,d^{4}x`,
   eth: String.raw`\text{3-SAT} \in \mathrm{TIME}\!\left(2^{o(n)}\right)`,
   eth_wall: String.raw`2^{\delta n}`,
+  rh_series: String.raw`\zeta(s)=\sum_{n\ge 1} n^{-s}`,
+  rh_claim: String.raw`\zeta(s)=0,\;\; 0<\operatorname{Re}s<1 \;\Longrightarrow\; \operatorname{Re}s=\tfrac12`,
   imo24: String.raw`\angle KIL + \angle YPX = 180^{\circ}`,
   imo25: String.raw`k \in \{0,\,1,\,3\}`,
   alphago: String.raw`p \approx \tfrac{1}{10\,000}`,

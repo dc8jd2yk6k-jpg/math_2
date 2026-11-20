@@ -164,6 +164,28 @@
    920
   ]
  },
+ "rh_series": {
+  "file": "assets/tex/rh_series.svg",
+  "wEx": 14.088,
+  "hEx": 5.058,
+  "viewBox": [
+   0,
+   -950,
+   6227,
+   2235.5
+  ]
+ },
+ "rh_claim": {
+  "file": "assets/tex/rh_claim.svg",
+  "wEx": 37.845,
+  "hEx": 2.737,
+  "viewBox": [
+   0,
+   -864.9,
+   16727.3,
+   1209.9
+  ]
+ },
  "imo24": {
   "file": "assets/tex/imo24.svg",
   "wEx": 23.476,

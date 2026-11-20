@@ -287,11 +287,21 @@ def shatter(rng):
     return np.stack([left, right], axis=1)
 
 
+def zero(rng, im):
+    """A zero of zeta lighting up: a clear bell tone whose pitch rises with its height
+    t on the critical line (14.13 -> ~330 Hz, 49.77 -> ~930 Hz)."""
+    f0 = 330 * 2 ** ((im - 14.13) / 24)
+    y = modes([f0, 2.0 * f0, 3.01 * f0, 4.2 * f0], [1, 0.35, 0.18, 0.08], [1.1, 0.6, 0.35, 0.2], 1.8, rng)
+    t = t_axis(1.8)
+    y *= np.clip(t / 0.003, 0, 1)
+    return reverb(norm(y), rt60=1.6, wet=0.22, rng=rng)
+
+
 # ------------------------------------------------------------------ mixing
 # peak level of each effect type (dBFS, before the limiter); the score peaks near -1 dBTP
 LEVEL = {
     "stone": -15, "move37": -5, "chess": -12, "tick": -24, "bloom": -15, "rewind": -17, "whoosh": -25,
-    "pencil": -31, "ding": -18, "crackle": -33, "wind": -21, "boom": -5, "paper": -27, "lean": -22, "shatter": -9,
+    "pencil": -31, "ding": -18, "crackle": -33, "wind": -21, "boom": -5, "paper": -27, "lean": -22, "shatter": -9, "zero": -21,
 }
 
 
@@ -343,6 +353,8 @@ def main():
             place(t, lean(rng), L, 0.15)
         elif k == "shatter":
             place(t, shatter(rng), L)
+        elif k == "zero":
+            place(t, zero(rng, e["im"]), L, -0.3 + 0.06 * e["k"])
 
     music, sr = load(rel("assets/audio/soundtrack.wav"))
     if sr != SR or len(music) != n:
