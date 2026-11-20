@@ -40,7 +40,7 @@ as a pure function of time. The same page plays live in a browser.
 | 1:02 | climax | **2026.10.06 · 722 manuscripts** | OpenAI: 722 papers burst into a helix tunnel; 162 carry Lean-checked main results |
 | 1:06 | climax | **2026.10.27 · Yang–Mills existence** | OpenAI (plus Kakeya): the Hopf fibration, whose axis fiber is the film's own trajectory |
 | 1:10 | climax | **ETH refuted ×2** | OpenAI, then hours later Claude (Anthropic): two exponential barriers shatter, the labs named beside them |
-| 1:14 | climax | **2026.11.20 · Riemann Hypothesis** | Levent Alpöge (Anthropic) with Claude: a proof of RH and GRH claimed and released as Lean code, **not yet independently verified**. The curve becomes the critical line Re(s) = ½ through the landscape log\|ζ(σ + it)\| over the critical strip (Euler–Maclaurin, `src/core/zeta.js`); the first ten zeros light up on eighth notes, each with its own bell tone |
+| 1:14 | climax | **2026.11.20 · Riemann Hypothesis** | Levent Alpöge (Anthropic) with Claude: a proof of RH and GRH claimed and released as Lean code, **not yet independently verified**. The curve becomes the critical line Re(s) = ½ through the landscape log\|ζ(σ + it)\| over the critical strip (Euler–Maclaurin, `src/core/zeta.js`); the first ten zeros light up on eighth notes, each with its own bell tone; the formula line defines ζ(s) = Σ n^(−s), then states the hypothesis |
 | 1:18 | climax | **escape** | The head leaves the top of the frame for good |
 | 1:19 | climax | **pull-back** | The whole curve over a 1950–2026 axis: decades → years → months → days → hours |
 | 1:23 | stabs | **the dive** | Back into the Navier–Stokes vortex, one zoom surge per stab: u(x,t) → λu(λx, λ²t), t → T* |
